@@ -32,6 +32,7 @@ class Tokenizer(r: ProcessorInputReader<Char>) : Processor<Char, Token>(r) {
 
                 LiteralToken.StringLiteral(raw)
             }
+
             '\'' -> {
                 val char =
                     if (r.step() == '\\') parseEscape(r.step())
@@ -40,6 +41,7 @@ class Tokenizer(r: ProcessorInputReader<Char>) : Processor<Char, Token>(r) {
 
                 LiteralToken.CharLiteral(char)
             }
+
             '(' -> Token.TestToken("(")
             ')' -> Token.TestToken(")")
             '{' -> Token.TestToken("{")
@@ -61,29 +63,20 @@ class Tokenizer(r: ProcessorInputReader<Char>) : Processor<Char, Token>(r) {
         error("$raw cannot be converted to i32, other types are TODO") // TODO
     }
 
-    override fun process(): Array<Token> {
-        if (r.isEmpty()) error("Reader not initialized, cant tokenize")
-
-        val tokenList = mutableListOf<Token>()
-
-        r.reset()
-        while (!r.isEof()) {
-            val c = r.current()
-            when {
-                c == '/' && r.peek() == '/' -> while(!r.isEof() && r.current() != '\n') r.step()
-                c.isSimple() -> {
-                    var raw = "$c"
-                    while (r.step().isSimple()) raw += r.current()
-                    tokenList.add(if (raw[0].isDigit()) tokenizeNumber(raw) else Token.IdentifierToken(raw))
-                }
-                c.isWhitespace() -> r.step()
-                else -> {
-                    tokenList.add(tokenizeSpecial(c))
-                    r.step()
-                }
+    override fun step(c: Char): Token? {
+        when {
+            c.isWhitespace() -> {}
+            c == '/' && r.peek() == '/' -> while (!r.isEof() && r.current() != '\n') r.step()
+            c.isSimple() -> {
+                var raw = "$c"
+                while (r.peek().isSimple()) raw += r.step()
+                return if (raw[0].isDigit()) tokenizeNumber(raw) else Token.IdentifierToken(raw)
+            }
+            else -> {
+                return tokenizeSpecial(c)
             }
         }
 
-        return tokenList.toTypedArray()
+        return null
     }
 }

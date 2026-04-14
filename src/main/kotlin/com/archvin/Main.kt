@@ -21,7 +21,7 @@ fun main(args: Array<String>) {
     val charReader = SimpleReader(code.toCharArray().toTypedArray(), 0.toChar())
     val tokenizer = Tokenizer(charReader)
     val tokenReader = SimpleReader(tokenizer.process(), Token.NullToken)
-    val expressionizer = Expressionizer(tokenReader)
-    expressionizer.process()
-    //Program.run()
+    tokenReader.getAll().forEach { println(it) }
+    //val expressionizer = Expressionizer(tokenReader)
+    //expressionizer.process()
 }

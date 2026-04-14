@@ -27,7 +27,7 @@ class Expressionizer(r: ProcessorInputReader<Token>) : Processor<Token, Unit>(r)
         }
     }
 
-    override fun process(): Array<Unit> {
+    override fun step(c: Token): Unit? {
         r.reset()
 
 
@@ -44,7 +44,7 @@ class Expressionizer(r: ProcessorInputReader<Token>) : Processor<Token, Unit>(r)
             r.step()
         }
 
-        return emptyArray()
+        return null
     }
 
     private enum class Expectation(val token: Token?, val clazz: KClass<*>?, val type: Type?) {
