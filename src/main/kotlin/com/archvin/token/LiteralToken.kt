@@ -17,7 +17,7 @@ sealed interface LiteralToken<out T> : Token, HasType {
     }
 
     sealed class NumberLiteral<T : Number>(override val value: T) : LiteralToken<T> {
-        data class I32Literal(override val value: Int) : LiteralToken.NumberLiteral<Int>(value) {
+        data class I32Literal(override val value: Int) : NumberLiteral<Int>(value) {
             override val type = I32Type
         }
     }

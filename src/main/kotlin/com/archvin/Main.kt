@@ -3,6 +3,7 @@ package com.archvin
 import com.archvin.process.Expressionizer
 import com.archvin.process.Tokenizer
 import com.archvin.reader.SimpleReader
+import com.archvin.token.Token
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -17,9 +18,9 @@ fun main(args: Array<String>) {
 
     val code = file.readText()
 
-    val charReader = SimpleReader(code.toCharArray().toTypedArray())
+    val charReader = SimpleReader(code.toCharArray().toTypedArray(), 0.toChar())
     val tokenizer = Tokenizer(charReader)
-    val tokenReader = SimpleReader(tokenizer.process())
+    val tokenReader = SimpleReader(tokenizer.process(), Token.NullToken)
     val expressionizer = Expressionizer(tokenReader)
     expressionizer.process()
     //Program.run()
