@@ -8,8 +8,4 @@ import com.archvin.process.Expressionizer
 object NullObject : HasId, HasType {
     override val id = "null"
     override val type = NullType
-
-    init {
-        Expressionizer.expressionize()
-    }
 }
