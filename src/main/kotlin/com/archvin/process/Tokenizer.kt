@@ -1,8 +1,12 @@
-package com.archvin.token
+package com.archvin.process
 
 import com.archvin.exceptions.CompileError
+import com.archvin.reader.ProcessorInputReader
+import com.archvin.token.LiteralToken
+import com.archvin.token.OperatorToken
+import com.archvin.token.Token
 
-class Tokenizer(val r: Reader) {
+class Tokenizer(r: ProcessorInputReader<Char>) : Processor<Char, Token>(r) {
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'
 
     private fun parseEscape(c: Char): Char = when (c) {
@@ -23,7 +27,7 @@ class Tokenizer(val r: Reader) {
                     raw +=
                         if (r.current() == '\\') parseEscape(r.step())
                         else r.current()
-                    if (r.index == r.content.length - 1) throw CompileError.UnclosedError("string literal")
+                    if (r.index == r.getAll().size - 1) throw CompileError.UnclosedError("string literal")
                 }
 
                 LiteralToken.StringLiteral(raw)
@@ -38,27 +42,29 @@ class Tokenizer(val r: Reader) {
             }
             '(' -> Token.TestToken("(")
             ')' -> Token.TestToken(")")
-            '+' -> Token.TestToken("+")
-            '-' -> Token.TestToken("-")
-            '*' -> Token.TestToken("*")
-            '/' -> Token.TestToken("/")
-            '=' -> Token.TestToken("=")
+            '{' -> Token.TestToken("{")
+            '}' -> Token.TestToken("}")
+            ',' -> Token.TestToken(",")
+            '&' -> Token.TestToken("&")
+            '=' -> OperatorToken(OperatorToken.OpType.ASSIGNMENT)
+            '+' -> OperatorToken(OperatorToken.OpType.ADDITION)
+            '-' -> OperatorToken(OperatorToken.OpType.SUBTRACTION)
+            '*' -> OperatorToken(OperatorToken.OpType.MULTIPLICATION)
+            '/' -> OperatorToken(OperatorToken.OpType.DIVISION)
             else -> throw CompileError.UnknownCharacterError("$c")
         }
     }
 
     private fun tokenizeNumber(raw: String): LiteralToken.NumberLiteral<*> {
         val value = raw.toIntOrNull()
-        value?.let { return I32Literal(value) }
+        value?.let { return LiteralToken.NumberLiteral.I32Literal(value) }
         error("$raw cannot be converted to i32, other types are TODO") // TODO
     }
 
-    private fun tokenizeSymbol(raw: String): Token.TestToken {
-        return Token.TestToken(raw)
-    }
-    
-    fun tokenize(): List<Token> {
-        val out = ArrayList<Token>()
+    override fun process(): Array<Token> {
+        if (r.isEmpty()) error("Reader not initialized, cant tokenize")
+
+        val tokenList = mutableListOf<Token>()
 
         r.reset()
         while (!r.isEof()) {
@@ -68,16 +74,16 @@ class Tokenizer(val r: Reader) {
                 c.isSimple() -> {
                     var raw = "$c"
                     while (r.step().isSimple()) raw += r.current()
-                    out.add(if (raw[0].isDigit()) tokenizeNumber(raw) else tokenizeSymbol(raw))
+                    tokenList.add(if (raw[0].isDigit()) tokenizeNumber(raw) else Token.IdentifierToken(raw))
                 }
                 c.isWhitespace() -> r.step()
                 else -> {
-                    out.add(tokenizeSpecial(c))
+                    tokenList.add(tokenizeSpecial(c))
                     r.step()
                 }
             }
         }
 
-        return out
+        return tokenList.toTypedArray()
     }
 }

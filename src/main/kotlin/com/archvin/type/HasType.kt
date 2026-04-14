@@ -2,5 +2,5 @@ package com.archvin.type
 
 interface HasType {
     val type: Type
-    fun matches(t2: HasType): Boolean {return type == t2.type}
+    fun matches(t2: HasType): Boolean = type.id == t2.type.id
 }

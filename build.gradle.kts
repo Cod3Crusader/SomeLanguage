@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "2.3.10"
+    application
 }
 
 group = "com.archvin"
@@ -13,7 +14,16 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
+application {
+    mainClass.set("com.archvin.MainKt")
+}
+
 kotlin {
+    sourceSets {
+        main {
+            kotlin.srcDirs("src/main/kotlin/packageName")
+        }
+    }
     jvmToolchain(25)
 }
 
