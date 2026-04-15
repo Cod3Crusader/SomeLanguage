@@ -1,12 +1,12 @@
 package com.archvin.process
 
 import com.archvin.exceptions.CompileError
-import com.archvin.reader.ProcessorInputReader
+import com.archvin.reader.Reader
 import com.archvin.token.LiteralToken
 import com.archvin.token.OperatorToken
 import com.archvin.token.Token
 
-class Tokenizer(r: ProcessorInputReader<Char>) : Processor<Char, Token>(r) {
+object Tokenizer : Processor<Token, Char> {
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'
 
     private fun parseEscape(c: Char): Char = when (c) {
@@ -19,7 +19,7 @@ class Tokenizer(r: ProcessorInputReader<Char>) : Processor<Char, Token>(r) {
         else -> throw CompileError.UnknownCharacterError("\\$c")
     }
 
-    private fun tokenizeSpecial(c: Char): Token {
+    private fun tokenizeSpecial(c: Char, r: Reader<Char>): Token {
         return when (c) {
             '"' -> {
                 var raw = ""
@@ -63,7 +63,7 @@ class Tokenizer(r: ProcessorInputReader<Char>) : Processor<Char, Token>(r) {
         error("$raw cannot be converted to i32, other types are TODO") // TODO
     }
 
-    override fun step(c: Char): Token? {
+    override fun step(c: Char, r: Reader<Char>): Token? {
         when {
             c.isWhitespace() -> {}
             c == '/' && r.peek() == '/' -> while (!r.isEof() && r.current() != '\n') r.step()
@@ -73,7 +73,7 @@ class Tokenizer(r: ProcessorInputReader<Char>) : Processor<Char, Token>(r) {
                 return if (raw[0].isDigit()) tokenizeNumber(raw) else Token.IdentifierToken(raw)
             }
             else -> {
-                return tokenizeSpecial(c)
+                return tokenizeSpecial(c, r)
             }
         }
 

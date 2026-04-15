@@ -1,19 +1,19 @@
 package com.archvin.process
 
-import com.archvin.reader.ProcessorInputReader
+import com.archvin.reader.Reader
 
-sealed class Processor<R, T>(val r: ProcessorInputReader<R>) {
-    protected abstract fun step(c: R): T?
+sealed interface Processor<T, R> {
+    fun step(c: R, r: Reader<R>): T?
 
-    fun process(): Array<T> {
+    fun process(r: Reader<R>): ArrayList<T> {
         val ret = arrayListOf<T>()
 
         r.reset()
         while (!r.isEof()) {
-            step(r.current())?.let { ret.add(it) }
+            step(r.current(), r)?.let { ret.add(it) }
             r.step()
         }
 
-        return ret.toArray() as Array<T>
+        return ret
     }
 }

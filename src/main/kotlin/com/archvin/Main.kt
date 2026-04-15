@@ -19,9 +19,9 @@ fun main(args: Array<String>) {
     val code = file.readText()
 
     val charReader = SimpleReader(code.toCharArray().toTypedArray(), 0.toChar())
-    val tokenizer = Tokenizer(charReader)
-    val tokenReader = SimpleReader(tokenizer.process(), Token.NullToken)
-    tokenReader.getAll().forEach { println(it) }
+    val tokens = Tokenizer.process(charReader).toTypedArray()
+    val tokenReader = SimpleReader(tokens, Token.NullToken)
+    tokens.forEach { println(it) }
     //val expressionizer = Expressionizer(tokenReader)
     //expressionizer.process()
 }

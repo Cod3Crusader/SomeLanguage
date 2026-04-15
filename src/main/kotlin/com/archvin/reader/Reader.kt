@@ -1,6 +1,6 @@
 package com.archvin.reader
 
-sealed class ProcessorInputReader<out T>(val defaultValue: T) {
+sealed class Reader<out T>(val defaultValue: T) {
     var index : Int = 0
         protected set(value) { field = value.coerceIn(0, length()) }
 
