@@ -1,9 +1,9 @@
 package com.archvin.expression
 
 import com.archvin.function.FunctionObject
+import com.archvin.type.BuiltinType.VoidType
 import com.archvin.type.HasType
 import com.archvin.type.Type
-import com.archvin.type.VoidType
 
 sealed class Expression(val returnType: Type) : HasType {
     override val type = returnType

@@ -3,6 +3,7 @@ package com.archvin
 import com.archvin.exceptions.RuntimeError
 import com.archvin.type.*
 import com.archvin.variable.Variable
+import com.archvin.type.BuiltinType.*
 
 object Resolver {
     private val map = mutableMapOf<String, HasId>()
