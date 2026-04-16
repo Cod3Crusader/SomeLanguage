@@ -1,3 +1,4 @@
+/*
 void greet(str name) {
     println("Hello" + name)
 }
@@ -13,3 +14,7 @@ i32 add(i32 a, i32 b) { a+b }
 void main() {
     greet("world")
 }
+*/
+
+//i32 a = 3
+println 32

@@ -67,6 +67,7 @@ object Tokenizer : Processor<Token, Char> {
         when {
             c.isWhitespace() -> {}
             c == '/' && r.peek() == '/' -> while (!r.isEof() && r.current() != '\n') r.step()
+            c == '/' && r.peek() == '*' -> while(!r.isEof() && !(r.current() == '/' && r.peek(-1) == '*')) r.step()
             c.isSimple() -> {
                 var raw = "$c"
                 while (r.peek().isSimple()) raw += r.step()
