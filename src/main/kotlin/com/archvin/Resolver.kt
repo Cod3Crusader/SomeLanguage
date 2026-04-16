@@ -1,12 +1,7 @@
 package com.archvin
 
 import com.archvin.exceptions.RuntimeError
-import com.archvin.type.CharType
-import com.archvin.type.HasId
-import com.archvin.type.I32Type
-import com.archvin.type.StrType
-import com.archvin.type.Type
-import com.archvin.type.VoidType
+import com.archvin.type.*
 import com.archvin.variable.Variable
 
 object Resolver {

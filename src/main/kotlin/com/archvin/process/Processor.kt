@@ -5,8 +5,8 @@ import com.archvin.reader.Reader
 sealed interface Processor<T, R> {
     fun step(c: R, r: Reader<R>): T?
 
-    fun process(r: Reader<R>): ArrayList<T> {
-        val ret = arrayListOf<T>()
+    fun process(r: Reader<R>): List<T> {
+        val ret = mutableListOf<T>()
 
         r.reset()
         while (!r.isEof()) {
@@ -14,6 +14,6 @@ sealed interface Processor<T, R> {
             r.step()
         }
 
-        return ret
+        return ret.toList()
     }
 }

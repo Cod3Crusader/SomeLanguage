@@ -6,7 +6,7 @@ sealed class Reader<out T>(val defaultValue: T) {
 
     abstract fun length(): Int
     abstract fun get(i: Int): T
-    abstract fun getAll(): Array<out T>
+    abstract fun getAll(): List<T>
 
     fun current(): T = get(index)
 
