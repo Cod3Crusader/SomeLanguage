@@ -7,5 +7,7 @@ data class OperatorToken(val opType: OpType) : Token {
         SUBTRACTION,
         MULTIPLICATION,
         DIVISION,
+        OPEN_BRACKET,
+        CLOSE_BRACKET,
     }
 }

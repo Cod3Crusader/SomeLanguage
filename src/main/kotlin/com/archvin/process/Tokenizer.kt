@@ -4,9 +4,10 @@ import com.archvin.exceptions.CompileError
 import com.archvin.reader.Reader
 import com.archvin.token.LiteralToken
 import com.archvin.token.OperatorToken
+import com.archvin.token.OperatorToken.OpType
 import com.archvin.token.Token
 
-object Tokenizer : Processor<Token, Char> {
+class Tokenizer : Processor<Token, Char>() {
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'
 
     private fun parseEscape(c: Char): Char = when (c) {
@@ -42,17 +43,17 @@ object Tokenizer : Processor<Token, Char> {
                 LiteralToken.CharLiteral(char)
             }
 
-            '(' -> Token.TestToken("(")
-            ')' -> Token.TestToken(")")
-            '{' -> Token.TestToken("{")
-            '}' -> Token.TestToken("}")
-            ',' -> Token.TestToken(",")
-            '&' -> Token.TestToken("&")
-            '=' -> OperatorToken(OperatorToken.OpType.ASSIGNMENT)
-            '+' -> OperatorToken(OperatorToken.OpType.ADDITION)
-            '-' -> OperatorToken(OperatorToken.OpType.SUBTRACTION)
-            '*' -> OperatorToken(OperatorToken.OpType.MULTIPLICATION)
-            '/' -> OperatorToken(OperatorToken.OpType.DIVISION)
+            '(' -> OperatorToken(OpType.OPEN_BRACKET)
+            ')' -> OperatorToken(OpType.CLOSE_BRACKET)
+            '{' -> Token.Test("{")
+            '}' -> Token.Test("}")
+            ',' -> Token.Test(",")
+            '&' -> Token.Test("&")
+            '=' -> OperatorToken(OpType.ASSIGNMENT)
+            '+' -> OperatorToken(OpType.ADDITION)
+            '-' -> OperatorToken(OpType.SUBTRACTION)
+            '*' -> OperatorToken(OpType.MULTIPLICATION)
+            '/' -> OperatorToken(OpType.DIVISION)
             else -> throw CompileError.UnknownCharacterError("$c")
         }
     }
@@ -63,7 +64,7 @@ object Tokenizer : Processor<Token, Char> {
         error("$raw cannot be converted to i32, other types are TODO") // TODO
     }
 
-    override fun step(c: Char, r: Reader<Char>): Token? {
+    override fun step(c: Char) {
         when {
             c.isWhitespace() -> {}
             c == '/' && r.peek() == '/' -> while (!r.isEof() && r.current() != '\n') r.step()
@@ -71,13 +72,14 @@ object Tokenizer : Processor<Token, Char> {
             c.isSimple() -> {
                 var raw = "$c"
                 while (r.peek().isSimple()) raw += r.step()
-                return if (raw[0].isDigit()) tokenizeNumber(raw) else Token.IdentifierToken(raw)
+                ret.add(
+                    if (raw[0].isDigit()) tokenizeNumber(raw)
+                    else Token.Identifier(raw)
+                )
             }
             else -> {
-                return tokenizeSpecial(c, r)
+                ret.add(tokenizeSpecial(c, r))
             }
         }
-
-        return null
     }
 }

@@ -1,18 +1,19 @@
-package com.archvin
+package com.archvin.process
 
 import com.archvin.exceptions.RuntimeError
-import com.archvin.type.*
+import com.archvin.type.BuiltinType
+import com.archvin.type.HasId
+import com.archvin.type.Type
 import com.archvin.variable.Variable
-import com.archvin.type.BuiltinType.*
 
-object Resolver {
+class Resolver {
     private val map = mutableMapOf<String, HasId>()
 
     init {
-        add(I32Type)
-        add(CharType)
-        add(StrType)
-        add(VoidType)
+        add(BuiltinType.I32Type)
+        add(BuiltinType.CharType)
+        add(BuiltinType.StrType)
+        add(BuiltinType.VoidType)
         add(HasId.TODO("println"))
     }
 

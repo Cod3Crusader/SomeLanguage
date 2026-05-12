@@ -2,15 +2,18 @@ package com.archvin.process
 
 import com.archvin.reader.Reader
 
-sealed interface Processor<T, R> {
-    fun step(c: R, r: Reader<R>): T?
+sealed class Processor<T, R> {
+    lateinit var r: Reader<R>
+    val ret = mutableListOf<T>()
+
+    abstract fun step(c: R)
 
     fun process(r: Reader<R>): List<T> {
-        val ret = mutableListOf<T>()
+        this.r = r
 
         r.reset()
         while (!r.isEof()) {
-            step(r.current(), r)?.let { ret.add(it) }
+            step(r.current())
             r.step()
         }
 

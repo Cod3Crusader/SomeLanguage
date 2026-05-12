@@ -1,9 +1,11 @@
 package com.archvin.type
 
-enum class BuiltinType(override val id: String) : Type, HasId {
-    CharType("char"),
-    I32Type("i32"),
-    StrType("str"),
-    VoidType("void"),
-    NullType("null")
+sealed class BuiltinType(override val id: String) : Type(), HasId {
+    data object CharType : BuiltinType("char")
+    data object I32Type : BuiltinType("i32")
+    data object StrType : BuiltinType("str")
+    data object VoidType : BuiltinType("void")
+
+    data object AnyType : Type()
 }
+
