@@ -14,7 +14,6 @@ class Resolver {
         add(BuiltinType.CharType)
         add(BuiltinType.StrType)
         add(BuiltinType.VoidType)
-        add(HasId.TODO("println"))
     }
 
     fun add(value: HasId) {

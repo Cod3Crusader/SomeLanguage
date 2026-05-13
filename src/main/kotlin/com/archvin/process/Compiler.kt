@@ -2,16 +2,16 @@ package com.archvin.process
 
 import com.archvin.exceptions.CompileError
 import com.archvin.exceptions.RuntimeError
-import com.archvin.expression.Expression
+import com.archvin.instruction.Instruction
 import com.archvin.reader.Reader
 import com.archvin.token.LiteralToken
 import com.archvin.token.OperatorToken
 import com.archvin.token.Token
 import com.archvin.type.Type
 import com.archvin.variable.Variable
-import java.util.Stack
+import java.util.*
 
-class Expressionizer(val resolver: Resolver) : Processor<Expression, Token>() {
+class Compiler(val resolver: Resolver) : Processor<Instruction, Token>() {
     private val manager = this.Manager()
 
     fun parseDeclaration(r: Reader<Token>, t: Type) {
@@ -23,11 +23,14 @@ class Expressionizer(val resolver: Resolver) : Processor<Expression, Token>() {
         val variable = Variable(id, t)
         resolver.add(variable)
 
-        manager.add(Expression.Declare(id, t))
+        manager.add(Instruction.Declare(id, t))
     }
 
     fun parseIdentifier(token: Token.Identifier, r: Reader<Token>) {
-        if (token.id == "println") manager.add(Expression.Println) // TODO: replace
+        if (token.id == "debug") {
+            manager.add(Instruction.Debug)
+            return
+        } // TODO: replace
 
         val resolved = resolver.resolve(token.id) ?: throw RuntimeError.UnresolvedIdentifier(token.id)
 
@@ -35,14 +38,14 @@ class Expressionizer(val resolver: Resolver) : Processor<Expression, Token>() {
             is Type -> {
                 parseDeclaration(r, resolved)
             }
-            is Variable -> manager.add(Expression.Read(resolved))
+            is Variable -> manager.add(Instruction.Read(resolved))
         }
     }
 
     override fun step(c: Token) {
         when (c) {
             is Token.Identifier -> parseIdentifier(c, r)
-            is LiteralToken<*> -> manager.add(Expression.Literal(c))
+            is LiteralToken<*> -> manager.add(Instruction.Literal(c))
 
             is OperatorToken -> { /*TODO*/ }
 
@@ -51,28 +54,28 @@ class Expressionizer(val resolver: Resolver) : Processor<Expression, Token>() {
         }
     }
 
-    private data class PendingExpr(val expr: Expression, var counter: Int)
+    private data class PendingInstr(val instr: Instruction, var counter: Int)
     private inner class Manager {
-        private val pending = Stack<PendingExpr>()
+        private val pending = Stack<PendingInstr>()
 
         fun hasPending() = pending.isNotEmpty()
 
-        fun add(baseExpr: Expression) {
+        fun add(baseInstr: Instruction) {
             if (hasPending()) {
                 val top = pending.peek()
-                val types = top.expr.paramTypes
-                baseExpr.asserType(types[types.size - top.counter])
+                val types = top.instr.paramTypes
+                baseInstr.asserType(types[types.size - top.counter])
             }
 
-            val counter = baseExpr.paramTypes.size
-            pending.push(PendingExpr(baseExpr, counter))
+            val counter = baseInstr.paramTypes.size
+            pending.push(PendingInstr(baseInstr, counter))
 
             if (counter == 0) pop()
         }
 
         fun pop() {
-            val expr = pending.pop().expr
-            ret.add(expr)
+            val instr = pending.pop().instr
+            ret.add(instr)
 
             if (hasPending() && --pending.peek().counter <= 0) pop()
         }

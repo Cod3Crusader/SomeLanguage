@@ -6,6 +6,6 @@ sealed class BuiltinType(override val id: String) : Type(), HasId {
     data object StrType : BuiltinType("str")
     data object VoidType : BuiltinType("void")
 
-    data object AnyType : Type()
+    data object DebugType : Type() // TODO: remove
 }
 

@@ -24,8 +24,8 @@ bool equals(i32 a, i32b) {
 
 i32 a 3
 i32 b a
-println a
-println b
+debug a
+debug b
 
 
 

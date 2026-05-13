@@ -1,6 +1,6 @@
 package com.archvin
 
-import com.archvin.process.Expressionizer
+import com.archvin.process.Compiler
 import com.archvin.process.Resolver
 import com.archvin.process.Tokenizer
 import com.archvin.reader.SimpleReader
@@ -26,6 +26,6 @@ fun main(args: Array<String>) {
 
     val resolver = Resolver()
 
-    val expr = Expressionizer(resolver).process(tokenReader)
+    val expr = Compiler(resolver).process(tokenReader)
     expr.forEach { println(it) }
 }

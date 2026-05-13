@@ -1,8 +1,7 @@
 package com.archvin.type
 
-import com.archvin.exceptions.CompileError
 import com.archvin.function.FunctionObject
-import com.archvin.type.BuiltinType.AnyType
+import com.archvin.type.BuiltinType.DebugType
 import com.archvin.variable.Variable
 
 sealed class Type {
@@ -18,5 +17,5 @@ sealed class Type {
         override fun toString(): String = "(${paramTypes.joinToString()}):($returnType)"
     }
 
-    fun matches(other: Type) = if (other is AnyType || this is AnyType) true else this == other
+    fun matches(other: Type) = if (other is DebugType || this is DebugType) true else this == other
 }
