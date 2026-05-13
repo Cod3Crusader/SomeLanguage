@@ -1,11 +1,13 @@
 package com.archvin.type
 
 sealed class BuiltinType(override val id: String) : Type(), HasId {
-    data object CharType : BuiltinType("char")
-    data object I32Type : BuiltinType("i32")
-    data object StrType : BuiltinType("str")
-    data object VoidType : BuiltinType("void")
+    override val className = "${id}T"
 
-    data object DebugType : Type() // TODO: remove
+    object CharType : BuiltinType("char")
+    object I32Type : BuiltinType("i32")
+    object StrType : BuiltinType("str")
+    object VoidType : BuiltinType("void")
+
+    object DebugType : Type() // TODO: remove
 }
 

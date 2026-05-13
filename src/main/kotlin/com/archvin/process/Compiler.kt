@@ -23,11 +23,11 @@ class Compiler(val resolver: Resolver) : Processor<Instruction, Token>() {
         val variable = Variable(id, t)
         resolver.add(variable)
 
-        manager.add(Instruction.Declare(id, t))
+        manager.add(Instruction.Assign(variable, t))
     }
 
     fun parseIdentifier(token: Token.Identifier, r: Reader<Token>) {
-        if (token.id == "debug") {
+        if (token.id == "println") {
             manager.add(Instruction.Debug)
             return
         } // TODO: replace
@@ -64,7 +64,7 @@ class Compiler(val resolver: Resolver) : Processor<Instruction, Token>() {
             if (hasPending()) {
                 val top = pending.peek()
                 val types = top.instr.paramTypes
-                baseInstr.asserType(types[types.size - top.counter])
+                baseInstr.assertType(types[types.size - top.counter])
             }
 
             val counter = baseInstr.paramTypes.size

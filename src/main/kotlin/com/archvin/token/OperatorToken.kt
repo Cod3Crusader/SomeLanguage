@@ -1,6 +1,6 @@
 package com.archvin.token
 
-data class OperatorToken(val opType: OpType) : Token {
+class OperatorToken(val opType: OpType) : Token() {
     enum class OpType {
         ASSIGNMENT,
         ADDITION,
