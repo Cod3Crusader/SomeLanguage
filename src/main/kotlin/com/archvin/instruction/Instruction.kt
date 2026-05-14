@@ -8,7 +8,7 @@ import com.archvin.type.HasType
 import com.archvin.type.Type
 import com.archvin.variable.Variable
 
-sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : Debug() , HasType {
+sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : Debug(), HasType {
     class Literal<out T>(val lit: LiteralToken<T>) : Instruction(lit.type, emptyList()) {
         override val className: String = "Lit"
     }

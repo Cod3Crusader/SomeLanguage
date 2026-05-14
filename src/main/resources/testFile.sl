@@ -10,7 +10,3 @@ println 5
 println "\nHello"
 str world = "World"
 println world
-
-// i32 break "pls"
-// throws an error as supposed to
-
