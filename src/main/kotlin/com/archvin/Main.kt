@@ -23,7 +23,7 @@ fun main(args: Array<String>) {
     val charReader = SimpleReader(code.toCharArray().toList(), 0.toChar())
 
     val tokens = Tokenizer().process(charReader)
-    val expr = Parser().process(SimpleReader(tokens, Token.NullToken))
+    val expr = Parser().process(SimpleReader(tokens, Token.PassToken))
     //expr.forEach { println(it) }
 
     Runner().process(SimpleReader(expr, Instruction.Pass))

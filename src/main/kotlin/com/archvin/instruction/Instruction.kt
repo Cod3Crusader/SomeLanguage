@@ -14,7 +14,7 @@ sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : 
     }
 
     class Read(val variable: Variable) : Instruction(variable.type, emptyList()) {}
-    class Assign(val variable: Variable, override val type: Type) : Instruction(type, listOf(type))
+    class Assign(val variable: Variable) : Instruction(variable.type, listOf(variable.type))
 
     object Println : Instruction(VoidType, listOf(BuiltinType.DebugType)) {} // TODO: replace
     object Pass : Instruction(VoidType, listOf())

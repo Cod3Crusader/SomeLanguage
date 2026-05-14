@@ -1,11 +1,14 @@
-i32 a 3
-i32 b a
+i32 a = 3
+i32 b = a
+
+a = 0
+
 println a
 println b
 println 5
 
 println "\nHello"
-str world "World"
+str world = "World"
 println world
 
 // i32 break "pls"

@@ -17,6 +17,8 @@ class Parser : Processor<Instruction, Token>() {
     private val manager = InstructionManager()
     private val resolver = Resolver()
 
+    private var expectToken = Token.PassToken
+
     fun parseDeclaration(r: Reader<Token>, t: Type) {
         val nextToken = r.step()
         if (nextToken !is Token.Identifier) throw CompileError.UnexpectedError("identifier", nextToken.toString())
@@ -26,7 +28,7 @@ class Parser : Processor<Instruction, Token>() {
         val variable = Variable(id, t)
         resolver.add(variable)
 
-        manager.add(Instruction.Assign(variable, t))
+        manager.add(Instruction.Assign(variable))
 
         if (r.step() != OperatorToken.Assignment) throw CompileError.UnexpectedError("=", r.current().raw)
     }
@@ -43,7 +45,13 @@ class Parser : Processor<Instruction, Token>() {
             is Type -> {
                 parseDeclaration(r, resolved)
             }
-            is Variable -> manager.add(Instruction.Read(resolved))
+            is Variable -> {
+                if (r.peek() == OperatorToken.Assignment) {
+                    manager.add(Instruction.Assign(resolved))
+                    r.step()
+                }
+                else manager.add(Instruction.Read(resolved))
+            }
         }
     }
 
@@ -52,9 +60,11 @@ class Parser : Processor<Instruction, Token>() {
             is Token.Identifier -> parseIdentifier(c, r)
             is LiteralToken<*> -> manager.add(Instruction.Literal(c))
 
-            is OperatorToken -> { /*TODO*/ }
+            is OperatorToken -> {
+                throw CompileError.UnexpectedError("expression", c.raw)
+            }
 
-            is Token.NullToken -> { /*TODO*/ }
+            is Token.PassToken -> { /*TODO*/ }
             is Token.Test -> { /*TODO*/ }
         }
     }
