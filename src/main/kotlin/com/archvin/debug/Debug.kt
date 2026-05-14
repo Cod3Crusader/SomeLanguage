@@ -1,11 +1,11 @@
-package com.debug
+package com.archvin.debug
 
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
 // Created with Claude AI
 
-abstract class DebugString {
+abstract class Debug {
     open val className = this::class.simpleName ?: "unnamed"
 
     override fun toString(): String {

@@ -5,6 +5,7 @@ import com.archvin.type.HasType
 
 sealed class LiteralToken<out T> : Token(), HasType {
     abstract val value: T
+    abstract override val type: BuiltinType<T>
 
     class StringLiteral(override val value: String) : LiteralToken<String>() {
         override val type = BuiltinType.StrType

@@ -4,6 +4,7 @@ import com.archvin.exceptions.CompileError
 
 interface HasType {
     val type: Type
+
     fun assertType(t2: Type) {
         if (type != t2) throw CompileError.TypeMismatchError(t2, type)
     }

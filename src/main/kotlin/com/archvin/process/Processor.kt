@@ -4,9 +4,13 @@ import com.archvin.reader.Reader
 
 sealed class Processor<T, R> {
     lateinit var r: Reader<R>
-    val ret = mutableListOf<T>()
+    private val ret = mutableListOf<T>()
 
     abstract fun step(c: R)
+
+    fun yield(add : T) {
+        ret.add(add)
+    }
 
     fun process(r: Reader<R>): List<T> {
         this.r = r

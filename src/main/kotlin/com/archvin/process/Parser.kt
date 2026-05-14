@@ -11,7 +11,7 @@ import com.archvin.type.Type
 import com.archvin.variable.Variable
 import java.util.*
 
-class Compiler(val resolver: Resolver) : Processor<Instruction, Token>() {
+class Parser(val resolver: Resolver) : Processor<Instruction, Token>() {
     private val manager = this.Manager()
 
     fun parseDeclaration(r: Reader<Token>, t: Type) {
@@ -28,7 +28,7 @@ class Compiler(val resolver: Resolver) : Processor<Instruction, Token>() {
 
     fun parseIdentifier(token: Token.Identifier, r: Reader<Token>) {
         if (token.id == "println") {
-            manager.add(Instruction.Debug)
+            manager.add(Instruction.Println)
             return
         } // TODO: replace
 
@@ -75,7 +75,7 @@ class Compiler(val resolver: Resolver) : Processor<Instruction, Token>() {
 
         fun pop() {
             val instr = pending.pop().instr
-            ret.add(instr)
+            yield(instr)
 
             if (hasPending() && --pending.peek().counter <= 0) pop()
         }

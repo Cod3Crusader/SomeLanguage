@@ -72,13 +72,13 @@ class Tokenizer : Processor<Token, Char>() {
             c.isSimple() -> {
                 var raw = "$c"
                 while (r.peek().isSimple()) raw += r.step()
-                ret.add(
+                yield(
                     if (raw[0].isDigit()) tokenizeNumber(raw)
                     else Token.Identifier(raw)
                 )
             }
             else -> {
-                ret.add(tokenizeSpecial(c, r))
+                yield(tokenizeSpecial(c, r))
             }
         }
     }
