@@ -1,13 +1,11 @@
 package com.archvin.token
 
-class OperatorToken(val opType: OpType) : Token() {
-    enum class OpType {
-        ASSIGNMENT,
-        ADDITION,
-        SUBTRACTION,
-        MULTIPLICATION,
-        DIVISION,
-        OPEN_BRACKET,
-        CLOSE_BRACKET,
-    }
+sealed class OperatorToken(raw: String) : Token(raw) {
+    object Assignment : OperatorToken("=")
+    object Addition : OperatorToken("+")
+    object Subtraction : OperatorToken("-")
+    object Multiplication : OperatorToken("*")
+    object Division : OperatorToken("/")
+    object OpenBracket : OperatorToken("(")
+    object CloseBracket : OperatorToken(")")
 }

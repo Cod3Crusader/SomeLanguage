@@ -7,12 +7,15 @@ import com.archvin.reader.Reader
 import com.archvin.token.LiteralToken
 import com.archvin.token.OperatorToken
 import com.archvin.token.Token
+import com.archvin.type.BuiltinType
+import com.archvin.type.HasId
 import com.archvin.type.Type
 import com.archvin.variable.Variable
 import java.util.*
 
-class Parser(val resolver: Resolver) : Processor<Instruction, Token>() {
-    private val manager = this.Manager()
+class Parser : Processor<Instruction, Token>() {
+    private val manager = InstructionManager()
+    private val resolver = Resolver()
 
     fun parseDeclaration(r: Reader<Token>, t: Type) {
         val nextToken = r.step()
@@ -24,6 +27,8 @@ class Parser(val resolver: Resolver) : Processor<Instruction, Token>() {
         resolver.add(variable)
 
         manager.add(Instruction.Assign(variable, t))
+
+        if (r.step() != OperatorToken.Assignment) throw CompileError.UnexpectedError("=", r.current().raw)
     }
 
     fun parseIdentifier(token: Token.Identifier, r: Reader<Token>) {
@@ -54,9 +59,10 @@ class Parser(val resolver: Resolver) : Processor<Instruction, Token>() {
         }
     }
 
-    private data class PendingInstr(val instr: Instruction, var counter: Int)
-    private inner class Manager {
-        private val pending = Stack<PendingInstr>()
+    private inner class InstructionManager {
+        private inner class PendingInstruction(val instr: Instruction, var counter: Int)
+
+        private val pending = Stack<PendingInstruction>()
 
         fun hasPending() = pending.isNotEmpty()
 
@@ -68,7 +74,7 @@ class Parser(val resolver: Resolver) : Processor<Instruction, Token>() {
             }
 
             val counter = baseInstr.paramTypes.size
-            pending.push(PendingInstr(baseInstr, counter))
+            pending.push(PendingInstruction(baseInstr, counter))
 
             if (counter == 0) pop()
         }
@@ -80,5 +86,26 @@ class Parser(val resolver: Resolver) : Processor<Instruction, Token>() {
             if (hasPending() && --pending.peek().counter <= 0) pop()
         }
 
+    }
+
+    private class Resolver {
+        private val map = mutableMapOf<String, HasId>()
+
+        init {
+            add(BuiltinType.I32Type)
+            add(BuiltinType.CharType)
+            add(BuiltinType.StrType)
+            add(BuiltinType.VoidType)
+        }
+
+        fun add(value: HasId) {
+            val id = value.id
+            if (map.containsKey(id)) throw RuntimeError.Redeclaration(id)
+            map[id] = value
+        }
+
+        fun resolve(id: String): HasId? = map[id]
+        fun resolveType(id: String): Type? = map[id] as? Type
+        fun resolveVar(id: String): Variable? = map[id] as? Variable
     }
 }

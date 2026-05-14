@@ -2,9 +2,9 @@ package com.archvin.token
 
 import com.archvin.debug.Debug
 
-sealed class Token : Debug() {
-    class Test(val raw: String) : Token() // TODO: remove
-    class Identifier(val id: String) : Token()
-    object NullToken : Token()
+sealed class Token(val raw: String) : Debug() {
+    class Test(raw: String) : Token(raw) // TODO: remove
+    class Identifier(val id: String) : Token(id)
+    object NullToken : Token("null")
 }
 

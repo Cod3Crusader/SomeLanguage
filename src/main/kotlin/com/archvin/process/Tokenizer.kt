@@ -3,8 +3,7 @@ package com.archvin.process
 import com.archvin.exceptions.CompileError
 import com.archvin.reader.Reader
 import com.archvin.token.LiteralToken
-import com.archvin.token.OperatorToken
-import com.archvin.token.OperatorToken.OpType
+import com.archvin.token.OperatorToken.*
 import com.archvin.token.Token
 
 class Tokenizer : Processor<Token, Char>() {
@@ -43,17 +42,17 @@ class Tokenizer : Processor<Token, Char>() {
                 LiteralToken.CharLiteral(char)
             }
 
-            '(' -> OperatorToken(OpType.OPEN_BRACKET)
-            ')' -> OperatorToken(OpType.CLOSE_BRACKET)
+            '(' -> OpenBracket
+            ')' -> CloseBracket
             '{' -> Token.Test("{")
             '}' -> Token.Test("}")
             ',' -> Token.Test(",")
             '&' -> Token.Test("&")
-            '=' -> OperatorToken(OpType.ASSIGNMENT)
-            '+' -> OperatorToken(OpType.ADDITION)
-            '-' -> OperatorToken(OpType.SUBTRACTION)
-            '*' -> OperatorToken(OpType.MULTIPLICATION)
-            '/' -> OperatorToken(OpType.DIVISION)
+            '=' -> Assignment
+            '+' -> Addition
+            '-' -> Subtraction
+            '*' -> Multiplication
+            '/' -> Division
             else -> throw CompileError.UnknownCharacterError("$c")
         }
     }
