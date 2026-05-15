@@ -6,13 +6,13 @@ import com.archvin.type.HasId
 import com.archvin.type.HasType
 import com.archvin.type.Type
 
-sealed class AbstractVariable(override val id: String, override val type: Type) : Debug(), HasId, HasType {
+sealed class Variable(override val id: String, override val type: Type) : Debug(), HasId, HasType {
     abstract var value: Value
         protected set
 
     abstract fun changeValue(value: Value)
 
-    class Variable(id: String, type: Type) : AbstractVariable(id, type) {
+    class Mutable(id: String, type: Type) : com.archvin.variable.Variable(id, type) {
         override var value: Value = Value.Uninitialized
             set(newValue) {
                 if (newValue.type != type) throw CompileError.TypeMismatchError(newValue.type, type)
@@ -28,7 +28,7 @@ sealed class AbstractVariable(override val id: String, override val type: Type) 
         }
     }
 
-    class Constant(id: String, override var value: Value) : AbstractVariable(id, value.type) {
+    class Constant(id: String, override var value: Value) : com.archvin.variable.Variable(id, value.type) {
         override fun changeValue(value: Value) {
             throw CompileError.CannotReassign(this)
         }

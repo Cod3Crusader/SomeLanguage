@@ -12,6 +12,8 @@ sealed class Processor<T, R> {
         ret.add(add)
     }
 
+    open fun post() {}
+
     fun process(r: Reader<R>): List<T> {
         this.r = r
 
@@ -20,6 +22,8 @@ sealed class Processor<T, R> {
             step(r.current())
             r.step()
         }
+
+        post()
 
         return ret.toList()
     }

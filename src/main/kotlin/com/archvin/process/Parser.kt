@@ -10,35 +10,40 @@ import com.archvin.token.Token
 import com.archvin.type.BuiltinType
 import com.archvin.type.HasId
 import com.archvin.type.Type
-import com.archvin.variable.AbstractVariable.Constant
-import com.archvin.variable.AbstractVariable.Variable
+import com.archvin.variable.FunctionValue
 import com.archvin.variable.FunctionValue.BuiltinFunction.Println
+import com.archvin.variable.Variable
+import com.archvin.variable.Variable.Constant
+import com.archvin.variable.Variable.Mutable
 import java.util.*
 
 class Parser : Processor<Instruction, Token>() {
     private val manager = InstructionManager()
     private val resolver = Resolver()
 
-    fun parseDeclaration(r: Reader<Token>, t: Type) {
+    private var callDepth = 0
+    private var expectCloseBracket = 0
+
+    private fun decCallDepth() {
+        callDepth--
+        expectCloseBracket++
+    }
+
+    private fun parseDeclaration(r: Reader<Token>, t: Type) {
         val nextToken = r.step()
         if (nextToken !is Token.Identifier) throw CompileError.UnexpectedError("identifier", nextToken.toString())
 
         val id = nextToken.id
 
-        val variable = Variable(id, t)
+        val variable = Mutable(id, t)
         resolver.add(variable)
 
-        manager.add(Instruction.Assign(variable))
+        manager.addPending(Instruction.Assign(variable))
 
         if (r.step() != OperatorToken.Assignment) throw CompileError.UnexpectedError("=", r.current().raw)
     }
 
-    fun parseIdentifier(token: Token.Identifier, r: Reader<Token>) {
-        if (token.id == "println") {
-            manager.add(Instruction.Println)
-            return
-        } // TODO: replace
-
+    private fun parseIdentifier(token: Token.Identifier, r: Reader<Token>) {
         val resolved = resolver.resolve(token.id) ?: throw RuntimeError.UnresolvedIdentifier(token.id)
 
         when (resolved) {
@@ -46,19 +51,35 @@ class Parser : Processor<Instruction, Token>() {
                 parseDeclaration(r, resolved)
             }
             is Variable -> {
-                if (r.peek() == OperatorToken.Assignment) {
-                    manager.add(Instruction.Assign(resolved))
-                    r.step()
+                when (r.step()) {
+                    is OperatorToken.OpenBracket -> {
+                        if (resolved.type is Type.FunctionType) {
+                            callDepth++
+                            manager.addPending(Instruction.Call(resolved.value as FunctionValue))
+                        }
+                        else throw CompileError.InvalidCallError(token)
+                    }
+                    is OperatorToken.Assignment -> manager.addPending(Instruction.Assign(resolved))
+                    else -> {
+                        manager.addPending(Instruction.Read(resolved))
+                        r.back()
+                    }
                 }
-                else manager.add(Instruction.Read(resolved))
             }
         }
     }
 
     override fun step(c: Token) {
+        if (expectCloseBracket > 0) {
+            if (c is OperatorToken.CloseBracket) expectCloseBracket--
+            else throw CompileError.UnexpectedError("(", c.raw)
+
+            return
+        }
+
         when (c) {
             is Token.Identifier -> parseIdentifier(c, r)
-            is LiteralToken<*> -> manager.add(Instruction.Literal(c))
+            is LiteralToken<*> -> manager.addPending(Instruction.Literal(c))
 
             is OperatorToken -> {
                 throw CompileError.UnexpectedError("expression", c.raw)
@@ -69,6 +90,12 @@ class Parser : Processor<Instruction, Token>() {
         }
     }
 
+    override fun post() {
+        if (expectCloseBracket > 0) throw CompileError.UnexpectedError("(", "")
+        if (callDepth > 0) throw CompileError.UnexpectedError("expression", "")
+        if (manager.hasPending()) throw CompileError.UnexpectedError("expression", "")
+    }
+
     private inner class InstructionManager {
         private inner class PendingInstruction(val instr: Instruction, var counter: Int)
 
@@ -76,24 +103,35 @@ class Parser : Processor<Instruction, Token>() {
 
         fun hasPending() = pending.isNotEmpty()
 
-        fun add(baseInstr: Instruction) {
+        private fun checkType(instr: Instruction) {
             if (hasPending()) {
                 val top = pending.peek()
                 val types = top.instr.paramTypes
-                baseInstr.assertType(types[types.size - top.counter])
+                instr.assertType(types[types.size - top.counter])
             }
-
-            val counter = baseInstr.paramTypes.size
-            pending.push(PendingInstruction(baseInstr, counter))
-
-            if (counter == 0) pop()
         }
 
-        fun pop() {
+        fun addPending(baseInstr: Instruction) {
+            checkType(baseInstr)
+
+            val counter = baseInstr.paramTypes.size
+
+            if (counter == 0) {
+                yield((baseInstr))
+                tryPop()
+            }
+            else pending.push(PendingInstruction(baseInstr, counter))
+        }
+
+        private fun tryPop() {
+            if (!hasPending()) return
+
             val instr = pending.pop().instr
             yield(instr)
 
-            if (hasPending() && --pending.peek().counter <= 0) pop()
+            if (instr is Instruction.Call) decCallDepth()
+
+            if (hasPending() && --pending.peek().counter <= 0) tryPop()
         }
 
     }
@@ -118,6 +156,6 @@ class Parser : Processor<Instruction, Token>() {
 
         fun resolve(id: String): HasId? = map[id]
         fun resolveType(id: String): Type? = map[id] as? Type
-        fun resolveVar(id: String): Variable? = map[id] as? Variable
+        fun resolveVar(id: String): Mutable? = map[id] as? Mutable
     }
 }

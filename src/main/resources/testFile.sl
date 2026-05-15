@@ -3,10 +3,10 @@ i32 b = a
 
 a = 0
 
-println a
-println b
-println 5
+println(a)
+println(b)
+println(5)
 
-println "\nHello"
+println("\nHello")
 str world = "World"
-println world
+println(world)

@@ -13,6 +13,7 @@ sealed class Reader<out T>(val defaultValue: T) {
     fun reset() { index = 0 }
 
     fun step(): T = get(++index)
+    fun back() { index-- }
 
     fun peek(i: Int = 1): T = get(index + i)
     fun isEof(): Boolean = index >= length()

@@ -9,8 +9,8 @@ import com.archvin.type.Type
 sealed class FunctionValue(val returnType: Type, val paramTypes: List<Type>) : Value(Type.FunctionType(paramTypes, returnType)), HasType {
     override fun asString() = type.signature
 
-    sealed class BuiltinFunction(override val id: String, type: Type, paramTypes: List<Type>) : FunctionValue(type, paramTypes),
-        HasId {
+    sealed class BuiltinFunction(override val id: String, type: Type, paramTypes: List<Type>)
+            : FunctionValue(type, paramTypes), HasId {
         abstract fun call(args: List<Value>): Value
 
         object Println : BuiltinFunction("println", BuiltinType.VoidType, listOf(BuiltinType.DebugType)) {
