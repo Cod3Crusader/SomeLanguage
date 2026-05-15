@@ -15,6 +15,6 @@ sealed class Type(val signature: String) : Debug() {
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is DebugType || this is DebugType) true else this === other
+        return if (other is DebugType || this is DebugType) true else this.signature == (other as? Type)?.signature
     }
 }

@@ -6,15 +6,15 @@ import com.archvin.type.BuiltinType
 import com.archvin.type.BuiltinType.VoidType
 import com.archvin.type.HasType
 import com.archvin.type.Type
-import com.archvin.variable.Variable
+import com.archvin.variable.AbstractVariable
 
 sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : Debug(), HasType {
     class Literal<out T>(val lit: LiteralToken<T>) : Instruction(lit.type, emptyList()) {
         override val className: String = "Lit"
     }
 
-    class Read(val variable: Variable) : Instruction(variable.type, emptyList()) {}
-    class Assign(val variable: Variable) : Instruction(variable.type, listOf(variable.type))
+    class Read(val variable: AbstractVariable) : Instruction(variable.type, emptyList()) {}
+    class Assign(val variable: AbstractVariable) : Instruction(variable.type, listOf(variable.type))
 
     object Println : Instruction(VoidType, listOf(BuiltinType.DebugType)) {} // TODO: replace
     object Pass : Instruction(VoidType, listOf())

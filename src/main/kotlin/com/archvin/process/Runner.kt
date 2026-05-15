@@ -17,7 +17,7 @@ class Runner : Processor<Unit, Instruction>() {
                 stack.add(c.variable.value)
             }
             is Assign -> {
-                c.variable.value = stack.pop()
+                c.variable.changeValue(stack.pop())
             }
             is Println -> println(stack.pop().asString())
             is Pass -> { /* Do nothing */ }

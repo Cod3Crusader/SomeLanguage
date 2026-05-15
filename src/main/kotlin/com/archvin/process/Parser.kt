@@ -10,14 +10,14 @@ import com.archvin.token.Token
 import com.archvin.type.BuiltinType
 import com.archvin.type.HasId
 import com.archvin.type.Type
-import com.archvin.variable.Variable
+import com.archvin.variable.AbstractVariable.Constant
+import com.archvin.variable.AbstractVariable.Variable
+import com.archvin.variable.FunctionValue.BuiltinFunction.Println
 import java.util.*
 
 class Parser : Processor<Instruction, Token>() {
     private val manager = InstructionManager()
     private val resolver = Resolver()
-
-    private var expectToken = Token.PassToken
 
     fun parseDeclaration(r: Reader<Token>, t: Type) {
         val nextToken = r.step()
@@ -106,6 +106,8 @@ class Parser : Processor<Instruction, Token>() {
             add(BuiltinType.CharType)
             add(BuiltinType.StrType)
             add(BuiltinType.VoidType)
+
+            add(Constant("println", Println))
         }
 
         fun add(value: HasId) {
