@@ -1,8 +1,8 @@
 package com.archvin.instruction
 
 import com.archvin.debug.Debug
+import com.archvin.exceptions.CompileError
 import com.archvin.token.LiteralToken
-import com.archvin.type.BuiltinType
 import com.archvin.type.BuiltinType.VoidType
 import com.archvin.type.HasType
 import com.archvin.type.Type
@@ -15,10 +15,13 @@ sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : 
     }
 
     class Read(val variable: Variable) : Instruction(variable.type, emptyList()) {}
-    class Assign(val variable: Variable) : Instruction(variable.type, listOf(variable.type))
+    class Assign(val variable: Variable) : Instruction(variable.type, listOf(variable.type)) {
+        init {
+            if (variable is Variable.Constant) throw CompileError.CannotReassign(variable)
+        }
+    }
 
     class Call(val function: FunctionValue) : Instruction(function.type, function.paramTypes)
 
-    object Println : Instruction(VoidType, listOf(BuiltinType.DebugType)) {} // TODO: replace
     object Pass : Instruction(VoidType, listOf())
 }

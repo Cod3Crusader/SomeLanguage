@@ -8,4 +8,5 @@ sealed class OperatorToken(raw: String) : Token(raw) {
     object Division : OperatorToken("/")
     object OpenBracket : OperatorToken("(")
     object CloseBracket : OperatorToken(")")
+    object Comma : OperatorToken(",")
 }

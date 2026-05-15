@@ -8,9 +8,6 @@ import com.archvin.type.Type
 
 sealed class Variable(override val id: String, override val type: Type) : Debug(), HasId, HasType {
     abstract var value: Value
-        protected set
-
-    abstract fun changeValue(value: Value)
 
     class Mutable(id: String, type: Type) : com.archvin.variable.Variable(id, type) {
         override var value: Value = Value.Uninitialized
@@ -22,17 +19,9 @@ sealed class Variable(override val id: String, override val type: Type) : Debug(
         constructor(id: String, value: Value) : this(id, value.type) {
             this.value = value
         }
-
-        override fun changeValue(value: Value) {
-            this.value = value
-        }
     }
 
-    class Constant(id: String, override var value: Value) : com.archvin.variable.Variable(id, value.type) {
-        override fun changeValue(value: Value) {
-            throw CompileError.CannotReassign(this)
-        }
-
+    class Constant(id: String, override var value: Value) : Variable(id, value.type) {
         init {
             if (value == Value.Uninitialized) throw CompileError.UninitializedError(this)
         }

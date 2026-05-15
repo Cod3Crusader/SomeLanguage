@@ -60,7 +60,7 @@ class Tokenizer : Processor<Token, Char>() {
     private fun tokenizeNumber(raw: String): LiteralToken.NumberLiteral<*> {
         val value = raw.toIntOrNull()
         value?.let { return LiteralToken.NumberLiteral.I32Literal(value) }
-        error("$raw cannot be converted to i32, other types are TODO") // TODO
+        error("$raw cannot be converted to i32") // TODO
     }
 
     override fun step(c: Char) {

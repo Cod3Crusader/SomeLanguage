@@ -11,6 +11,7 @@ import com.archvin.type.BuiltinType
 import com.archvin.type.HasId
 import com.archvin.type.Type
 import com.archvin.variable.FunctionValue
+import com.archvin.variable.FunctionValue.BuiltinFunction.Add
 import com.archvin.variable.FunctionValue.BuiltinFunction.Println
 import com.archvin.variable.Variable
 import com.archvin.variable.Variable.Constant
@@ -72,7 +73,7 @@ class Parser : Processor<Instruction, Token>() {
     override fun step(c: Token) {
         if (expectCloseBracket > 0) {
             if (c is OperatorToken.CloseBracket) expectCloseBracket--
-            else throw CompileError.UnexpectedError("(", c.raw)
+            else throw CompileError.UnexpectedError(")", c.raw)
 
             return
         }
@@ -91,7 +92,7 @@ class Parser : Processor<Instruction, Token>() {
     }
 
     override fun post() {
-        if (expectCloseBracket > 0) throw CompileError.UnexpectedError("(", "")
+        if (expectCloseBracket > 0) throw CompileError.UnexpectedError(")", "")
         if (callDepth > 0) throw CompileError.UnexpectedError("expression", "")
         if (manager.hasPending()) throw CompileError.UnexpectedError("expression", "")
     }
@@ -115,12 +116,9 @@ class Parser : Processor<Instruction, Token>() {
             checkType(baseInstr)
 
             val counter = baseInstr.paramTypes.size
+            pending.push(PendingInstruction(baseInstr, counter))
 
-            if (counter == 0) {
-                yield((baseInstr))
-                tryPop()
-            }
-            else pending.push(PendingInstruction(baseInstr, counter))
+            if (counter == 0) tryPop()
         }
 
         private fun tryPop() {
@@ -146,6 +144,7 @@ class Parser : Processor<Instruction, Token>() {
             add(BuiltinType.VoidType)
 
             add(Constant("println", Println))
+            add(Constant("add", Add))
         }
 
         fun add(value: HasId) {
