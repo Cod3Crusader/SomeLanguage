@@ -44,7 +44,7 @@ class Tokenizer : Processor<Token, Char>() {
             ')' -> OperatorToken.CloseBracket
             '{' -> Token.Test("{")
             '}' -> Token.Test("}")
-            ',' -> Token.Test(",")
+            ',' -> OperatorToken.Comma
             '&' -> Token.Test("&")
             '=' -> OperatorToken.Assignment
             '+' -> OperatorToken.Addition

@@ -2,7 +2,6 @@ package com.archvin.parser
 
 import com.archvin.Processor
 import com.archvin.exceptions.CompileError
-import com.archvin.exceptions.RuntimeError
 import com.archvin.program.Instruction
 import com.archvin.reader.Reader
 import com.archvin.token.LiteralToken
@@ -18,7 +17,9 @@ class Parser : Processor<Instruction, Token>() {
     private val resolver = Resolver()
 
     private var callDepth = 0
+        set(value) { field = value; expectComma = false }
     private var expectCloseBracket = 0
+    private var expectComma = false
 
     private fun decCallDepth() {
         callDepth--
@@ -39,8 +40,16 @@ class Parser : Processor<Instruction, Token>() {
         if (r.step() != OperatorToken.Assignment) throw CompileError.UnexpectedError("=", r.current().raw)
     }
 
+    private fun parseCall(callable: Variable) {
+        if (callable.type is Type.FunctionType) {
+            callDepth++
+            manager.addPending(Instruction.Call(callable.value as FunctionValue))
+        }
+        else throw CompileError.InvalidCallError(callable.id)
+    }
+
     private fun parseIdentifier(token: Token.Identifier, r: Reader<Token>) {
-        val resolved = resolver.resolve(token.id) ?: throw RuntimeError.UnresolvedIdentifier(token.id)
+        val resolved = resolver.resolve(token.id) ?: throw CompileError.UnresolvedIdentifier(token.id)
 
         when (resolved) {
             is Type -> {
@@ -48,13 +57,7 @@ class Parser : Processor<Instruction, Token>() {
             }
             is Variable -> {
                 when (r.step()) {
-                    is OperatorToken.OpenBracket -> {
-                        if (resolved.type is Type.FunctionType) {
-                            callDepth++
-                            manager.addPending(Instruction.Call(resolved.value as FunctionValue))
-                        }
-                        else throw CompileError.InvalidCallError(token)
-                    }
+                    is OperatorToken.OpenBracket -> parseCall(resolved)
                     is OperatorToken.Assignment -> manager.addPending(Instruction.Assign(resolved))
                     else -> {
                         manager.addPending(Instruction.Read(resolved))
@@ -66,11 +69,20 @@ class Parser : Processor<Instruction, Token>() {
     }
 
     override fun step(c: Token) {
+        // TODO: figure out a less ugly way to do this
         if (expectCloseBracket > 0) {
             if (c is OperatorToken.CloseBracket) expectCloseBracket--
             else throw CompileError.UnexpectedError(")", c.raw)
 
             return
+        }
+        if (callDepth > 0) {
+            if (expectComma) {
+                if (c !is OperatorToken.Comma) throw CompileError.UnexpectedError(",", c.raw)
+                expectComma = false
+                return
+            }
+            expectComma = true
         }
 
         when (c) {

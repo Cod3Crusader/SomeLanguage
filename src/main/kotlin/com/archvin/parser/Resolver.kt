@@ -1,6 +1,6 @@
 package com.archvin.parser
 
-import com.archvin.exceptions.RuntimeError
+import com.archvin.exceptions.CompileError
 import com.archvin.type.BuiltinType
 import com.archvin.type.HasId
 import com.archvin.type.Type
@@ -22,7 +22,7 @@ internal class Resolver {
 
     fun add(value: HasId) {
         val id = value.id
-        if (map.containsKey(id)) throw RuntimeError.Redeclaration(id)
+        if (map.containsKey(id)) throw CompileError.Redeclaration(id)
         map[id] = value
     }
 

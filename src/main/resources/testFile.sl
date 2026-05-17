@@ -12,4 +12,8 @@ str world = "World"
 println(world)
 */
 
-println(add(1 2))
+println(add(1,, 2))
+
+/*
+
+*/

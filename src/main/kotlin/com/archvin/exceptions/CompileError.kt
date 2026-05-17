@@ -1,6 +1,5 @@
 package com.archvin.exceptions
 
-import com.archvin.token.Token
 import com.archvin.type.Type
 import com.archvin.variable.Variable
 
@@ -12,5 +11,8 @@ sealed class CompileError(errorMessage: String) : Exception(errorMessage) {
     class UnclosedError(unclosed: String) : CompileError("Unclosed: \"$unclosed\"")
     class UninitializedError(uninitialized: Variable) : CompileError("\"${uninitialized.id}\" cannot be uninitialized")
     class CannotReassign(variable: Variable.Constant) : CompileError("Cannot reassign constant: \"${variable.id}\"")
-    class InvalidCallError(token: Token) : CompileError("\"${token.raw}\" cannot be called")
+    class InvalidCallError(tried: String) : CompileError("\"$tried\" cannot be called")
+    class UnresolvedIdentifier(id: String) : RuntimeError("Unresolved identifier $id")
+    class Redeclaration(id: String) : RuntimeError("Redeclaration for $id")
+
 }
