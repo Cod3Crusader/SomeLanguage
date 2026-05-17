@@ -1,18 +1,18 @@
-package com.archvin.process
+package com.archvin
 
 import com.archvin.reader.Reader
 
-sealed class Processor<T, R> {
-    lateinit var r: Reader<R>
+abstract class Processor<T, R> {
+    protected lateinit var r: Reader<R>
     private val ret = mutableListOf<T>()
 
-    abstract fun step(c: R)
+    protected abstract fun step(c: R)
 
-    fun yield(add : T) {
+    protected fun yield(add : T) {
         ret.add(add)
     }
 
-    open fun post() {}
+    protected open fun postProcess() {}
 
     fun process(r: Reader<R>): List<T> {
         this.r = r
@@ -23,7 +23,7 @@ sealed class Processor<T, R> {
             r.step()
         }
 
-        post()
+        postProcess()
 
         return ret.toList()
     }

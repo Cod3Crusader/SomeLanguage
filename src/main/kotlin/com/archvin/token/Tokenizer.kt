@@ -1,10 +1,8 @@
-package com.archvin.process
+package com.archvin.token
 
+import com.archvin.Processor
 import com.archvin.exceptions.CompileError
 import com.archvin.reader.Reader
-import com.archvin.token.LiteralToken
-import com.archvin.token.OperatorToken.*
-import com.archvin.token.Token
 
 class Tokenizer : Processor<Token, Char>() {
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'
@@ -42,17 +40,17 @@ class Tokenizer : Processor<Token, Char>() {
                 LiteralToken.CharLiteral(char)
             }
 
-            '(' -> OpenBracket
-            ')' -> CloseBracket
+            '(' -> OperatorToken.OpenBracket
+            ')' -> OperatorToken.CloseBracket
             '{' -> Token.Test("{")
             '}' -> Token.Test("}")
             ',' -> Token.Test(",")
             '&' -> Token.Test("&")
-            '=' -> Assignment
-            '+' -> Addition
-            '-' -> Subtraction
-            '*' -> Multiplication
-            '/' -> Division
+            '=' -> OperatorToken.Assignment
+            '+' -> OperatorToken.Addition
+            '-' -> OperatorToken.Subtraction
+            '*' -> OperatorToken.Multiplication
+            '/' -> OperatorToken.Division
             else -> throw CompileError.UnknownCharacterError("$c")
         }
     }

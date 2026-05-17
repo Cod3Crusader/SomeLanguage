@@ -1,11 +1,11 @@
 package com.archvin
 
-import com.archvin.instruction.Instruction
-import com.archvin.process.Parser
-import com.archvin.process.Runner
-import com.archvin.process.Tokenizer
+import com.archvin.parser.Parser
+import com.archvin.program.Instruction
+import com.archvin.program.Runner
 import com.archvin.reader.SimpleReader
 import com.archvin.token.Token
+import com.archvin.token.Tokenizer
 import java.io.File
 
 fun main(args: Array<String>) {

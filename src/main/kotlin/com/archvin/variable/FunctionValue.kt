@@ -1,6 +1,6 @@
 package com.archvin.variable
 
-import com.archvin.instruction.Instruction
+import com.archvin.program.Instruction
 import com.archvin.type.BuiltinType
 import com.archvin.type.BuiltinType.I32Type
 import com.archvin.type.HasType

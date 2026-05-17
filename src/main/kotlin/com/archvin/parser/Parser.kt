@@ -1,21 +1,16 @@
-package com.archvin.process
+package com.archvin.parser
 
+import com.archvin.Processor
 import com.archvin.exceptions.CompileError
 import com.archvin.exceptions.RuntimeError
-import com.archvin.instruction.Instruction
+import com.archvin.program.Instruction
 import com.archvin.reader.Reader
 import com.archvin.token.LiteralToken
 import com.archvin.token.OperatorToken
 import com.archvin.token.Token
-import com.archvin.type.BuiltinType
-import com.archvin.type.HasId
 import com.archvin.type.Type
 import com.archvin.variable.FunctionValue
-import com.archvin.variable.FunctionValue.BuiltinFunction.Add
-import com.archvin.variable.FunctionValue.BuiltinFunction.Println
 import com.archvin.variable.Variable
-import com.archvin.variable.Variable.Constant
-import com.archvin.variable.Variable.Mutable
 import java.util.*
 
 class Parser : Processor<Instruction, Token>() {
@@ -36,7 +31,7 @@ class Parser : Processor<Instruction, Token>() {
 
         val id = nextToken.id
 
-        val variable = Mutable(id, t)
+        val variable = Variable.Mutable(id, t)
         resolver.add(variable)
 
         manager.addPending(Instruction.Assign(variable))
@@ -91,7 +86,7 @@ class Parser : Processor<Instruction, Token>() {
         }
     }
 
-    override fun post() {
+    override fun postProcess() {
         if (expectCloseBracket > 0) throw CompileError.UnexpectedError(")", "")
         if (callDepth > 0) throw CompileError.UnexpectedError("expression", "")
         if (manager.hasPending()) throw CompileError.UnexpectedError("expression", "")
@@ -132,29 +127,5 @@ class Parser : Processor<Instruction, Token>() {
             if (hasPending() && --pending.peek().counter <= 0) tryPop()
         }
 
-    }
-
-    private class Resolver {
-        private val map = mutableMapOf<String, HasId>()
-
-        init {
-            add(BuiltinType.I32Type)
-            add(BuiltinType.CharType)
-            add(BuiltinType.StrType)
-            add(BuiltinType.VoidType)
-
-            add(Constant("println", Println))
-            add(Constant("add", Add))
-        }
-
-        fun add(value: HasId) {
-            val id = value.id
-            if (map.containsKey(id)) throw RuntimeError.Redeclaration(id)
-            map[id] = value
-        }
-
-        fun resolve(id: String): HasId? = map[id]
-        fun resolveType(id: String): Type? = map[id] as? Type
-        fun resolveVar(id: String): Mutable? = map[id] as? Mutable
     }
 }

@@ -1,8 +1,7 @@
-package com.archvin.process
+package com.archvin.program
 
-import com.archvin.instruction.Instruction
-import com.archvin.instruction.Instruction.*
-import com.archvin.type.BuiltinType.VoidType
+import com.archvin.Processor
+import com.archvin.type.BuiltinType
 import com.archvin.variable.FunctionValue
 import com.archvin.variable.Value
 import java.util.*
@@ -12,26 +11,26 @@ class Runner : Processor<Unit, Instruction>() {
 
     fun execute(instr: Instruction) {
         when (instr) {
-            is Literal<*> -> {
+            is Instruction.Literal<*> -> {
                 stack.push(Value.PrimitiveValue(instr.lit.value, instr.lit.type))
             }
-            is Read -> {
+            is Instruction.Read -> {
                 stack.push(instr.variable.value)
             }
-            is Assign -> {
+            is Instruction.Assign -> {
                 instr.variable.value = stack.pop()
             }
-            is Call -> {
+            is Instruction.Call -> {
                 val func = instr.function
                 if (func is FunctionValue.BuiltinFunction) {
                     val params = func.paramTypes.indices.map { stack.pop() }
 
-                    func.call(params).takeIf { func.returnType !is VoidType }?.let { stack.push(it) }
+                    func.call(params).takeIf { func.returnType !is BuiltinType.VoidType }?.let { stack.push(it) }
                 } else {
                     TODO("coming very soon")
                 }
             }
-            is Pass -> { /* Do nothing */ }
+            is Instruction.Pass -> { /* Do nothing */ }
         }
     }
 
