@@ -1,6 +1,6 @@
-package com.archvin.program
+package com.archvin.process
 
-import com.archvin.Processor
+import com.archvin.instruction.Instruction
 import com.archvin.type.BuiltinType
 import com.archvin.variable.FunctionValue
 import com.archvin.variable.Value
@@ -11,16 +11,16 @@ class Runner : Processor<Unit, Instruction>() {
 
     fun execute(instr: Instruction) {
         when (instr) {
-            is Instruction.Literal<*> -> {
+            is Instruction.LitInstr<*> -> {
                 stack.push(Value.PrimitiveValue(instr.lit.value, instr.lit.type))
             }
-            is Instruction.Read -> {
+            is Instruction.ReadInstr -> {
                 stack.push(instr.variable.value)
             }
-            is Instruction.Assign -> {
+            is Instruction.AssignInstr -> {
                 instr.variable.value = stack.pop()
             }
-            is Instruction.Call -> {
+            is Instruction.CallInstr -> {
                 val func = instr.function
                 if (func is FunctionValue.BuiltinFunction) {
                     val params = func.paramTypes.indices.map { stack.pop() }
@@ -30,7 +30,7 @@ class Runner : Processor<Unit, Instruction>() {
                     TODO("coming very soon")
                 }
             }
-            is Instruction.Pass -> { /* Do nothing */ }
+            is Instruction.PassInstr -> { /* Do nothing */ }
         }
     }
 

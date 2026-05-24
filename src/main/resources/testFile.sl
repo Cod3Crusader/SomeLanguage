@@ -12,7 +12,8 @@ str world = "World"
 println(world)
 */
 
-println(add(1,, 2))
+i32 a = 3
+println(add(add(a, 2), 1))
 
 /*
 

@@ -1,4 +1,4 @@
-package com.archvin.debug
+package com.archvin.utils
 
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor

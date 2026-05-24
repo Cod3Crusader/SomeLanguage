@@ -1,7 +1,7 @@
 package com.archvin.type
 
-import com.archvin.debug.Debug
 import com.archvin.type.BuiltinType.DebugType
+import com.archvin.utils.Debug
 
 sealed class Type(val signature: String) : Debug() {
     sealed class ObjectType(override val id: String) : Type(id), HasId

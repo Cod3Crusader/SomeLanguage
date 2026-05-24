@@ -1,18 +1,19 @@
-package com.archvin.parser
+package com.archvin.process
 
-import com.archvin.Processor
 import com.archvin.exceptions.CompileError
-import com.archvin.program.Instruction
+import com.archvin.instruction.Instruction
 import com.archvin.reader.Reader
-import com.archvin.token.LiteralToken
-import com.archvin.token.OperatorToken
+import com.archvin.token.SpecialToken
 import com.archvin.token.Token
+import com.archvin.type.BuiltinType
+import com.archvin.type.HasId
 import com.archvin.type.Type
 import com.archvin.variable.FunctionValue
 import com.archvin.variable.Variable
 import java.util.*
 
-class Parser : Processor<Instruction, Token>() {
+@Deprecated("Now split into a parser and type checker", replaceWith = ReplaceWith("NewParser", "com/archvin/process/NewParser.kt"))
+class OldParser : Processor<Instruction, Token>() {
     private val manager = InstructionManager()
     private val resolver = Resolver()
 
@@ -35,15 +36,15 @@ class Parser : Processor<Instruction, Token>() {
         val variable = Variable.Mutable(id, t)
         resolver.add(variable)
 
-        manager.addPending(Instruction.Assign(variable))
+        manager.addPending(Instruction.AssignInstr(variable))
 
-        if (r.step() != OperatorToken.Assignment) throw CompileError.UnexpectedError("=", r.current().raw)
+        if (r.step() != SpecialToken.Assignment) throw CompileError.UnexpectedError("=", r.current().raw)
     }
 
     private fun parseCall(callable: Variable) {
         if (callable.type is Type.FunctionType) {
             callDepth++
-            manager.addPending(Instruction.Call(callable.value as FunctionValue))
+            manager.addPending(Instruction.CallInstr(callable.value as FunctionValue))
         }
         else throw CompileError.InvalidCallError(callable.id)
     }
@@ -57,10 +58,10 @@ class Parser : Processor<Instruction, Token>() {
             }
             is Variable -> {
                 when (r.step()) {
-                    is OperatorToken.OpenBracket -> parseCall(resolved)
-                    is OperatorToken.Assignment -> manager.addPending(Instruction.Assign(resolved))
+                    is SpecialToken.OpenBracket -> parseCall(resolved)
+                    is SpecialToken.Assignment -> manager.addPending(Instruction.AssignInstr(resolved))
                     else -> {
-                        manager.addPending(Instruction.Read(resolved))
+                        manager.addPending(Instruction.ReadInstr(resolved))
                         r.back()
                     }
                 }
@@ -71,14 +72,14 @@ class Parser : Processor<Instruction, Token>() {
     override fun step(c: Token) {
         // TODO: figure out a less ugly way to do this
         if (expectCloseBracket > 0) {
-            if (c is OperatorToken.CloseBracket) expectCloseBracket--
+            if (c is SpecialToken.CloseBracket) expectCloseBracket--
             else throw CompileError.UnexpectedError(")", c.raw)
 
             return
         }
         if (callDepth > 0) {
             if (expectComma) {
-                if (c !is OperatorToken.Comma) throw CompileError.UnexpectedError(",", c.raw)
+                if (c !is SpecialToken.Comma) throw CompileError.UnexpectedError(",", c.raw)
                 expectComma = false
                 return
             }
@@ -87,21 +88,24 @@ class Parser : Processor<Instruction, Token>() {
 
         when (c) {
             is Token.Identifier -> parseIdentifier(c, r)
-            is LiteralToken<*> -> manager.addPending(Instruction.Literal(c))
+            is Token.LiteralToken<*> -> manager.addPending(Instruction.LitInstr(c.lit))
 
-            is OperatorToken -> {
+            is SpecialToken -> {
                 throw CompileError.UnexpectedError("expression", c.raw)
             }
 
-            is Token.PassToken -> { /*TODO*/ }
-            is Token.Test -> { /*TODO*/ }
+            is Token.Test -> TODO()
         }
     }
 
-    override fun postProcess() {
+    override fun process(r: Reader<Token>): List<Instruction> {
+        val ret = super.process(r)
+
         if (expectCloseBracket > 0) throw CompileError.UnexpectedError(")", "")
         if (callDepth > 0) throw CompileError.UnexpectedError("expression", "")
         if (manager.hasPending()) throw CompileError.UnexpectedError("expression", "")
+
+        return ret
     }
 
     private inner class InstructionManager {
@@ -134,10 +138,34 @@ class Parser : Processor<Instruction, Token>() {
             val instr = pending.pop().instr
             yield(instr)
 
-            if (instr is Instruction.Call) decCallDepth()
+            if (instr is Instruction.CallInstr) decCallDepth()
 
             if (hasPending() && --pending.peek().counter <= 0) tryPop()
         }
+    }
 
+    internal class Resolver {
+        private val map = mutableMapOf<String, HasId>()
+
+        init {
+            add(BuiltinType.I32Type)
+            add(BuiltinType.CharType)
+            add(BuiltinType.StrType)
+            add(BuiltinType.VoidType)
+
+            add(Variable.Constant("println", FunctionValue.BuiltinFunction.Println))
+            add(Variable.Constant("add", FunctionValue.BuiltinFunction.Add))
+        }
+
+        fun add(value: HasId) {
+            val id = value.id
+            if (map.containsKey(id)) throw CompileError.Redeclaration(id)
+            map[id] = value
+        }
+
+        fun resolve(id: String): HasId? = map[id]
+        fun resolveType(id: String): Type? = map[id] as? Type
+        fun resolveVar(id: String): Variable.Mutable? = map[id] as? Variable.Mutable
     }
 }
+

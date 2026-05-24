@@ -1,9 +1,9 @@
 package com.archvin.variable
 
-import com.archvin.debug.Debug
 import com.archvin.type.BuiltinType
 import com.archvin.type.HasType
 import com.archvin.type.Type
+import com.archvin.utils.Debug
 
 sealed class Value(override val type: Type) : Debug(), HasType {
     abstract fun asString(): String // not the same as toString

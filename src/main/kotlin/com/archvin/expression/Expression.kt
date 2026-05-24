@@ -1,0 +1,18 @@
+package com.archvin.expression
+
+import com.archvin.utils.Debug
+import com.archvin.variable.FunctionValue
+import com.archvin.variable.Literal
+
+sealed class Expression : Debug() {
+    class IdExpr(val id: String) : Expression()
+    class LitExpr<out T>(val lit: Literal<T>) : Expression()
+
+    class AssignExpr(val variableId: String) : Expression()
+    class OpExpr(val operationFun: FunctionValue) : Expression()
+    class CallExpr(val functionId: String) : Expression() {
+        var paramNum = 0
+    }
+
+    object PassExpr : Expression()
+}

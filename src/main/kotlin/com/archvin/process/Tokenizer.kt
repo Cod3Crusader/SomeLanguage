@@ -1,8 +1,11 @@
-package com.archvin.token
+package com.archvin.process
 
-import com.archvin.Processor
 import com.archvin.exceptions.CompileError
 import com.archvin.reader.Reader
+import com.archvin.token.SpecialToken
+import com.archvin.token.Token
+import com.archvin.token.Token.LiteralToken
+import com.archvin.variable.Literal
 
 class Tokenizer : Processor<Token, Char>() {
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'
@@ -28,7 +31,7 @@ class Tokenizer : Processor<Token, Char>() {
                     if (r.index == r.getAll().size - 1) throw CompileError.UnclosedError("string literal")
                 }
 
-                LiteralToken.StringLiteral(raw)
+                LiteralToken(Literal.StringLiteral(raw))
             }
 
             '\'' -> {
@@ -37,27 +40,27 @@ class Tokenizer : Processor<Token, Char>() {
                     else r.current()
                 if (r.step() != '\'') throw CompileError.UnclosedError("character literal")
 
-                LiteralToken.CharLiteral(char)
+                LiteralToken(Literal.CharLiteral(char))
             }
 
-            '(' -> OperatorToken.OpenBracket
-            ')' -> OperatorToken.CloseBracket
+            '(' -> SpecialToken.OpenBracket
+            ')' -> SpecialToken.CloseBracket
             '{' -> Token.Test("{")
             '}' -> Token.Test("}")
-            ',' -> OperatorToken.Comma
+            ',' -> SpecialToken.Comma
             '&' -> Token.Test("&")
-            '=' -> OperatorToken.Assignment
-            '+' -> OperatorToken.Addition
-            '-' -> OperatorToken.Subtraction
-            '*' -> OperatorToken.Multiplication
-            '/' -> OperatorToken.Division
+            '=' -> SpecialToken.Assignment
+            '+' -> SpecialToken.Addition
+            '-' -> SpecialToken.Subtraction
+            '*' -> SpecialToken.Multiplication
+            '/' -> SpecialToken.Division
             else -> throw CompileError.UnknownCharacterError("$c")
         }
     }
 
-    private fun tokenizeNumber(raw: String): LiteralToken.NumberLiteral<*> {
+    private fun tokenizeNumber(raw: String): LiteralToken<*> {
         val value = raw.toIntOrNull()
-        value?.let { return LiteralToken.NumberLiteral.I32Literal(value) }
+        value?.let { return LiteralToken(Literal.NumberLiteral.I32Literal(value)) }
         error("$raw cannot be converted to i32") // TODO
     }
 

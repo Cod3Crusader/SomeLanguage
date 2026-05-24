@@ -8,6 +8,6 @@ sealed class BuiltinType<out T>(override val id: String) : Type.ObjectType(id) {
     object StrType : BuiltinType<String>("str")
     object VoidType : BuiltinType<Unit>("void")
 
-    object DebugType : ObjectType("debug") // TODO: remove
+    object DebugType : ObjectType("utils") // TODO: remove
 }
 

@@ -1,11 +1,13 @@
 package com.archvin
 
-import com.archvin.parser.Parser
-import com.archvin.program.Instruction
-import com.archvin.program.Runner
+import com.archvin.expression.Expression
+import com.archvin.instruction.Instruction
+import com.archvin.process.NewParser
+import com.archvin.process.Runner
+import com.archvin.process.Tokenizer
+import com.archvin.process.TypeChecker
 import com.archvin.reader.SimpleReader
-import com.archvin.token.Token
-import com.archvin.token.Tokenizer
+import com.archvin.token.SpecialToken
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -23,9 +25,10 @@ fun main(args: Array<String>) {
     val charReader = SimpleReader(code.toCharArray().toList(), 0.toChar())
 
     val tokens = Tokenizer().process(charReader)
-    val expr = Parser().process(SimpleReader(tokens, Token.PassToken))
-    //expr.forEach { println(it) }
+    val expr = NewParser().process(SimpleReader(tokens, SpecialToken.NewLine))
+    val instr = TypeChecker().process(SimpleReader(expr, Expression.PassExpr))
+    //instr.forEach { println(it) }
 
     //println()
-    Runner().process(SimpleReader(expr, Instruction.Pass))
+    Runner().process(SimpleReader(instr, Instruction.PassInstr))
 }
