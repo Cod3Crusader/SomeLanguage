@@ -15,10 +15,6 @@ sealed class Variable(override val id: String, override val type: Type) : Debug(
                 if (newValue.type != type) throw CompileError.TypeMismatchError(newValue.type, type)
                 field = newValue
             }
-
-        constructor(id: String, value: Value) : this(id, value.type) {
-            this.value = value
-        }
     }
 
     class Constant(id: String, override var value: Value) : Variable(id, value.type) {

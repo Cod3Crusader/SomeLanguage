@@ -2,7 +2,7 @@ package com.archvin.process
 
 import com.archvin.reader.Reader
 
-sealed class Processor<T, R> {
+abstract class Processor<T, R> {
     protected lateinit var r: Reader<R>
     private val ret = mutableListOf<T>()
 

@@ -74,7 +74,7 @@ class Tokenizer : Processor<Token, Char>() {
                 while (r.peek().isSimple()) raw += r.step()
                 yield(
                     if (raw[0].isDigit()) tokenizeNumber(raw)
-                    else Token.Identifier(raw)
+                    else Token.IdentifierToken(raw)
                 )
             }
             else -> {

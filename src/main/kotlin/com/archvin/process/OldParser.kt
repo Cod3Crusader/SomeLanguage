@@ -29,7 +29,7 @@ class OldParser : Processor<Instruction, Token>() {
 
     private fun parseDeclaration(r: Reader<Token>, t: Type) {
         val nextToken = r.step()
-        if (nextToken !is Token.Identifier) throw CompileError.UnexpectedError("identifier", nextToken.toString())
+        if (nextToken !is Token.IdentifierToken) throw CompileError.UnexpectedError("identifier", nextToken.toString())
 
         val id = nextToken.id
 
@@ -49,7 +49,7 @@ class OldParser : Processor<Instruction, Token>() {
         else throw CompileError.InvalidCallError(callable.id)
     }
 
-    private fun parseIdentifier(token: Token.Identifier, r: Reader<Token>) {
+    private fun parseIdentifier(token: Token.IdentifierToken, r: Reader<Token>) {
         val resolved = resolver.resolve(token.id) ?: throw CompileError.UnresolvedIdentifier(token.id)
 
         when (resolved) {
@@ -87,7 +87,7 @@ class OldParser : Processor<Instruction, Token>() {
         }
 
         when (c) {
-            is Token.Identifier -> parseIdentifier(c, r)
+            is Token.IdentifierToken -> parseIdentifier(c, r)
             is Token.LiteralToken<*> -> manager.addPending(Instruction.LitInstr(c.lit))
 
             is SpecialToken -> {
