@@ -12,15 +12,14 @@ class Parser(private val resolver: Resolver) : Processor<Expression, Token>() {
     private var callStack = ArrayDeque<Expression.CallExpr>()
 
     override fun yield(add: Expression) {
-        super.yield(add)
-
         callStack.lastOrNull()?.paramNum++
 
         if (callStack.isNotEmpty() && add !is Expression.CallExpr) {
-            if (r.step() is SpecialToken.Comma) callStack.last().paramNum++
-            else if (r.current() is SpecialToken.CloseBracket) decCallDepth()
-            else throw CompileError.UnexpectedError(",", r.current().raw)
+            if (r.step() is SpecialToken.CloseBracket) decCallDepth()
+            else if (r.current() !is SpecialToken.Comma) throw CompileError.UnexpectedError(",", r.current().raw)
         }
+
+        super.yield(add)
     }
 
     fun decCallDepth() {
@@ -53,8 +52,8 @@ class Parser(private val resolver: Resolver) : Processor<Expression, Token>() {
 
             SpecialToken.OpenBracket -> {
                 val call = Expression.CallExpr(id)
-                callStack.add(call)
                 yield(call)
+                callStack.add(call)
             }
 
             is IdentifierToken -> {
