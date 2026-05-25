@@ -1,6 +1,6 @@
-package com.archvin.process
+package com.archvin.program
 
-import com.archvin.instruction.Instruction
+import com.archvin.Processor
 import com.archvin.type.BuiltinType
 import com.archvin.variable.FunctionValue
 import com.archvin.variable.Value

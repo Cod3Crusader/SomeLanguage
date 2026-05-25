@@ -2,9 +2,9 @@ package com.archvin
 
 import com.archvin.parser.Parser
 import com.archvin.parser.Resolver
-import com.archvin.process.Tokenizer
 import com.archvin.reader.SimpleReader
 import com.archvin.token.SpecialToken
+import com.archvin.token.Tokenizer
 import java.io.File
 
 fun main(args: Array<String>) {

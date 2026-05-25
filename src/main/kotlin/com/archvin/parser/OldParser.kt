@@ -1,7 +1,8 @@
-package com.archvin.process
+package com.archvin.parser
 
+import com.archvin.Processor
 import com.archvin.exceptions.CompileError
-import com.archvin.instruction.Instruction
+import com.archvin.program.Instruction
 import com.archvin.reader.Reader
 import com.archvin.token.SpecialToken
 import com.archvin.token.Token
@@ -168,4 +169,3 @@ class OldParser : Processor<Instruction, Token>() {
         fun resolveVar(id: String): Variable.Mutable? = map[id] as? Variable.Mutable
     }
 }
-

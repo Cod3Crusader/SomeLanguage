@@ -1,4 +1,4 @@
-package com.archvin.instruction
+package com.archvin.program
 
 import com.archvin.exceptions.CompileError
 import com.archvin.type.BuiltinType.VoidType

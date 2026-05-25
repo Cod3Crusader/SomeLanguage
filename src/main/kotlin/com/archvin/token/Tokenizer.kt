@@ -1,10 +1,8 @@
-package com.archvin.process
+package com.archvin.token
 
+import com.archvin.Processor
 import com.archvin.exceptions.CompileError
 import com.archvin.reader.Reader
-import com.archvin.token.SpecialToken
-import com.archvin.token.Token
-import com.archvin.token.Token.LiteralToken
 import com.archvin.variable.Literal
 
 class Tokenizer : Processor<Token, Char>() {
@@ -31,7 +29,7 @@ class Tokenizer : Processor<Token, Char>() {
                     if (r.index == r.getAll().size - 1) throw CompileError.UnclosedError("string literal")
                 }
 
-                LiteralToken(Literal.StringLiteral(raw))
+                Token.LiteralToken(Literal.StringLiteral(raw))
             }
 
             '\'' -> {
@@ -40,7 +38,7 @@ class Tokenizer : Processor<Token, Char>() {
                     else r.current()
                 if (r.step() != '\'') throw CompileError.UnclosedError("character literal")
 
-                LiteralToken(Literal.CharLiteral(char))
+                Token.LiteralToken(Literal.CharLiteral(char))
             }
 
             '(' -> SpecialToken.OpenBracket
@@ -58,9 +56,9 @@ class Tokenizer : Processor<Token, Char>() {
         }
     }
 
-    private fun tokenizeNumber(raw: String): LiteralToken<*> {
+    private fun tokenizeNumber(raw: String): Token.LiteralToken<*> {
         val value = raw.toIntOrNull()
-        value?.let { return LiteralToken(Literal.NumberLiteral.I32Literal(value)) }
+        value?.let { return Token.LiteralToken(Literal.NumberLiteral.I32Literal(value)) }
         error("$raw cannot be converted to i32") // TODO
     }
 

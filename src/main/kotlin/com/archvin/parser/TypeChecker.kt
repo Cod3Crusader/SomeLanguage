@@ -1,9 +1,8 @@
 package com.archvin.parser
 
+import com.archvin.Processor
 import com.archvin.exceptions.CompileError
-import com.archvin.expression.Expression
-import com.archvin.instruction.Instruction
-import com.archvin.process.Processor
+import com.archvin.program.Instruction
 import com.archvin.reader.Reader
 
 class TypeChecker(private val resolver : Resolver) : Processor<Instruction, Expression>() {

@@ -1,6 +1,6 @@
 package com.archvin.exceptions
 
-import com.archvin.instruction.Instruction
+import com.archvin.program.Instruction
 import com.archvin.type.Type
 import com.archvin.variable.Variable
 
