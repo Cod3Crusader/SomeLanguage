@@ -12,7 +12,7 @@ import com.archvin.variable.FunctionValue
 import com.archvin.variable.Variable
 import java.util.*
 
-@Deprecated("Now split into a parser and type checker", replaceWith = ReplaceWith("NewParser", "com/archvin/process/NewParser.kt"))
+@Deprecated("Now split into a parser and type checker", replaceWith = ReplaceWith("Parser", "com/archvin/process/Parser.kt"))
 class OldParser : Processor<Instruction, Token>() {
     private val manager = InstructionManager()
     private val resolver = Resolver()

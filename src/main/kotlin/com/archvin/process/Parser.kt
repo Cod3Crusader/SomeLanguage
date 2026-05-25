@@ -2,22 +2,13 @@ package com.archvin.process
 
 import com.archvin.exceptions.CompileError
 import com.archvin.expression.Expression
-import com.archvin.expression.Expression.IdExpr
 import com.archvin.expression.Expression.LitExpr
 import com.archvin.token.SpecialToken
 import com.archvin.token.SpecialToken.*
 import com.archvin.token.Token
 
-class NewParser : Processor<Expression, Token>() {
-    private var prev: Token.Identifier? = null
-
+class Parser : Processor<Expression, Token>() {
     private var callStack = ArrayDeque<Expression.CallExpr>()
-
-    private fun consumePrev(consumer: (String) -> Unit) {
-        if (prev == null) throw CompileError.UnexpectedError("expression", r.current().raw)
-        consumer(prev!!.id)
-        prev = null
-    }
 
     override fun yield(add: Expression) {
         super.yield(add)
@@ -41,35 +32,40 @@ class NewParser : Processor<Expression, Token>() {
 
     private fun parseSpecial(t: SpecialToken) {
         when (t) {
-            Assignment -> consumePrev {
-                yield(Expression.AssignExpr(it))
-            }
-
-            OpenBracket -> consumePrev {
-                val call = Expression.CallExpr(it)
-                callStack.add(call)
-                yield(call)
-            }
-
             CloseBracket -> decCallDepth()
 
             Comma -> {
                 if (callStack.isEmpty()) throw CompileError.UnexpectedError("expression", ",")
-                consumePrev {  super.yield(IdExpr(it)) }
             }
 
             else -> TODO()
         }
     }
 
+    private fun parseIdentifier(id: String) {
+        when (r.step()) {
+            Assignment -> {
+                yield(Expression.AssignExpr(id))
+            }
+
+            OpenBracket -> {
+                val call = Expression.CallExpr(id)
+                callStack.add(call)
+                yield(call)
+            }
+
+            else -> {
+                r.back()
+                yield(Expression.ReadExpr(id))
+            }
+        }
+
+    }
+
     override fun step(c: Token) {
         when (c) {
-            is Token.Identifier -> {
-                prev?.let { yield(IdExpr(it.id)) }
-                prev = c
-            }
+            is Token.Identifier -> parseIdentifier(c.id)
             is Token.LiteralToken<*> -> {
-                if (prev != null)  yield(IdExpr(prev!!.id))
                 yield(LitExpr(c.lit))
             }
             is SpecialToken -> parseSpecial(c)

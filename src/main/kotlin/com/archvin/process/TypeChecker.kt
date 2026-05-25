@@ -37,7 +37,7 @@ class TypeChecker : Processor<Instruction, Expression>() {
 
     override fun step(c: Expression) {
         when (c) {
-            is IdExpr -> parseIdentifier(c.id)
+            is ReadExpr -> parseIdentifier(c.id)
             is LitExpr<*> -> manager.addComplete(Instruction.LitInstr(c.lit))
             is AssignExpr -> manager.addPending(Instruction.AssignInstr(resolver.resolveVar(c.variableId)))
             is CallExpr -> {
