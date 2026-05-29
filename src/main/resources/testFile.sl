@@ -17,7 +17,7 @@ void greet(str, str) /*{
     println(name)
 }*/
 
-greet("hiii", "me")
+//greet("hiii", "me")
 
 /*
 i32 a = 3

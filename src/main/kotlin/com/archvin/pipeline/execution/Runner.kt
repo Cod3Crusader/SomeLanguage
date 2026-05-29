@@ -24,10 +24,10 @@ class Runner : Stage<Unit, Instruction>() {
             is Instruction.CallInstr -> {
                 val func = instr.function
                 if (func is FunctionValue.BuiltinFunction) {
-                    val params = func.paramTypes.indices.map { stack.pop() }.reversed()
+                    val params = func.type.paramTypes.indices.map { stack.pop() }.reversed()
                     // TODO: reverse at compile time
 
-                    func.call(params).takeIf { func.returnType !is BuiltinType.VoidType }?.let { stack.push(it) }
+                    func.call(params).takeIf { func.type.retType !is BuiltinType.VoidType }?.let { stack.push(it) }
                 } else {
                     TODO("coming very soon")
                 }

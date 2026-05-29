@@ -16,7 +16,7 @@ sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : 
     class ReadInstr(val variable: Variable) : Instruction(variable.type, emptyList()) {}
     class AssignInstr(val variable: Variable) : Instruction(variable.type, listOf(variable.type))
 
-    class CallInstr(val function: FunctionValue) : Instruction(function.returnType, function.paramTypes)
+    class CallInstr(val function: FunctionValue) : Instruction(function.type.retType, function.type.paramTypes)
 
     object PassInstr : Instruction(VoidType, listOf())
 }

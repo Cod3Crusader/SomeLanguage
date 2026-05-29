@@ -6,10 +6,12 @@ import com.archvin.type.BuiltinType.I32Type
 import com.archvin.type.HasType
 import com.archvin.type.Type
 
-sealed class FunctionValue(val returnType: Type, val paramTypes: List<Type>) : Value(Type.FunctionType(
+sealed class FunctionValue(returnType: Type, paramTypes: List<Type>) : Value(Type.FunctionType(
     returnType,
     paramTypes
 )), HasType {
+    override val type: Type.FunctionType = super.type as Type.FunctionType
+
     override fun asString() = type.signature
 
     sealed class BuiltinFunction(returnType: Type, paramTypes: List<Type>)

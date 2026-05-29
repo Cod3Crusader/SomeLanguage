@@ -66,7 +66,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
             is DeclareExpr -> declare(c)
             is CallExpr -> {
                 val resolved = resolver.resolveFunc(c.functionId)
-                val paramNum = resolved.paramTypes.size
+                val paramNum = resolved.type.paramTypes.size
                 if (c.paramNum != paramNum) throw CompileError.InvalidArgumentCount(c.functionId, paramNum, c.paramNum)
                 manager.addPending(Instruction.CallInstr(resolved))
             }
