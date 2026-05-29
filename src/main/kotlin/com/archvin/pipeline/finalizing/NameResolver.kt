@@ -4,8 +4,9 @@ import com.archvin.exceptions.CompileError
 import com.archvin.type.BuiltinType
 import com.archvin.type.HasId
 import com.archvin.type.Type
-import com.archvin.variable.FunctionValue
-import com.archvin.variable.Variable
+import com.archvin.variable.BuiltinFunction
+import com.archvin.variable.VariableLike
+import com.archvin.variable.VariableLike.Variable
 
 class NameResolver {
     private val map = mutableMapOf<String, HasId>()
@@ -16,8 +17,8 @@ class NameResolver {
         add(BuiltinType.StrType)
         add(BuiltinType.VoidType)
 
-        add(Variable("println", FunctionValue.BuiltinFunction.Println))
-        add(Variable("add", FunctionValue.BuiltinFunction.Add))
+        add(BuiltinFunction.Println)
+        add(BuiltinFunction.Add)
     }
 
     fun add(value: HasId) {
@@ -29,7 +30,7 @@ class NameResolver {
     fun tryResolve(id: String): HasId? = map[id]
     fun resolve(id: String): HasId = map[id] ?: throw CompileError.UnresolvedIdentifier(id)
     fun resolveType(id: String) = map[id] as? Type ?: throw CompileError.UnresolvedIdentifier(id)
-    fun resolveFunc(id: String) = (map[id] as? Variable)?.value as? FunctionValue ?: throw CompileError.InvalidCallError(id)
+    fun resolveFunc(id: String) = map[id] as? VariableLike.Function ?: throw CompileError.UnresolvedIdentifier(id)
     fun resolveVar(id: String) = map[id] as? Variable ?: throw CompileError.UnresolvedIdentifier(id)
 
 }

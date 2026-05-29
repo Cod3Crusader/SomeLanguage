@@ -6,7 +6,7 @@ import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
 import com.archvin.type.Type
-import com.archvin.variable.Variable
+import com.archvin.variable.VariableLike.Variable
 
 class TypeChecker : Stage<Instruction, Expression>() {
     private val resolver = NameResolver()
