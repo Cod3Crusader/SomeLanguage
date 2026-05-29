@@ -12,15 +12,17 @@ str world = "World"
 println(world)
 */
 
-//void div(i32, i32)
-/*{
+void greet(str, str) /*{
     println("Hello")
     println(name)
 }*/
 
+greet("hiii", "me")
+
+/*
 i32 a = 3
 println(add(add(a, 2), 1))
-
+*/
 /*
 
 */

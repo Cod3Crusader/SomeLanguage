@@ -2,11 +2,13 @@ package com.archvin.type
 
 import com.archvin.type.BuiltinType.DebugType
 import com.archvin.utils.Debug
+import com.archvin.utils.funSignature
 
 sealed class Type(val signature: String) : Debug() {
     sealed class ObjectType(override val id: String) : Type(id), HasId
 
-        class FunctionType(val returnType: Type, val paramTypes: List<Type>) : Type("(${paramTypes.joinToString()}):($returnType)") {
+        class FunctionType(val retType: Type, val paramTypes: List<Type>)
+            : Type(funSignature(retType.signature, paramTypes.map { it.signature })) {
         override fun toString(): String = signature
     }
 

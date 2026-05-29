@@ -1,6 +1,7 @@
 package com.archvin.pipeline.parsing
 
 import com.archvin.utils.Debug
+import com.archvin.utils.funSignature
 import com.archvin.variable.FunctionValue
 import com.archvin.variable.Literal
 
@@ -18,7 +19,10 @@ sealed class Expression : Debug() {
         }
     }
 
-    class DeclareExpr(val id: String, val typeId: String, val isMutable: Boolean) : Expression()
+    open class DeclareExpr(val id: String, val typeId: String, val isMutable: Boolean) : Expression() {
+        class FunDeclare(id: String, val retType: String, val paramTypes: List<String>)
+            : DeclareExpr(id, funSignature(retType, paramTypes), false)
+    }
 
     object PassExpr : Expression()
 }

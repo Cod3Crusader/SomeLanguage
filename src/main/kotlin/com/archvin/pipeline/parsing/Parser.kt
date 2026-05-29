@@ -44,7 +44,6 @@ class Parser : Stage<Expression, Token>() {
         if (r.step() is SpecialToken.Assignment) {
             yield(Expression.DeclareExpr(id, typeId, true))
         }
-        /*
         else if (r.current() is SpecialToken.OpenBracket) {
             val paramTypes = arrayListOf<String>()
             while (true) {
@@ -54,9 +53,8 @@ class Parser : Stage<Expression, Token>() {
                 if (r.step() is SpecialToken.CloseBracket) break
                 else if (r.current() !is SpecialToken.Comma) throw CompileError.UnexpectedError(",", r.current().raw)
             }
-            header.elements.add(HeaderElement.FunctionDeclaration(id, typeId, paramTypes))
+            yield(Expression.DeclareExpr.FunDeclare(id, typeId, paramTypes))
         }
-        */
         else throw CompileError.UninitializedError(id)
     }
 

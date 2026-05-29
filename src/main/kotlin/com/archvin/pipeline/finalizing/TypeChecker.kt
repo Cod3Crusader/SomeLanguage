@@ -5,6 +5,7 @@ import com.archvin.pipeline.Stage
 import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
+import com.archvin.type.Type
 import com.archvin.variable.Variable
 
 class TypeChecker : Stage<Instruction, Expression>() {
@@ -27,6 +28,32 @@ class TypeChecker : Stage<Instruction, Expression>() {
     *
      */
 
+    /*
+    private fun <T : HasId> String.resolve(): T {
+        @Suppress("UNCHECKED_CAST")
+        return resolver.tryResolve(this) as? T ?: throw CompileError.UnresolvedIdentifier(this)
+    }
+     */
+
+    fun declare(c: DeclareExpr) {
+        if (c !is DeclareExpr.FunDeclare) {
+
+            val type = resolver.resolveType(c.typeId)
+            val variable = Variable(c.id, type, c.isMutable)
+            resolver.add(variable)
+            manager.addPending(Instruction.AssignInstr(variable))
+        } else {
+            val type =
+                 Type.FunctionType(
+                    resolver.resolveType(c.retType),
+                    c.paramTypes.map { resolver.resolveType(it) }
+                )
+
+            val variable = Variable(c.id, type, false)
+            resolver.add(variable)
+        }
+    }
+
     override fun step(c: Expression) {
         when (c) {
             is ReadExpr -> manager.addComplete(Instruction.ReadInstr(resolver.resolveVar(c.id)))
@@ -36,12 +63,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
                 manager.addPending(Instruction.AssignInstr(variable))
                 if (!variable.isMutable) throw CompileError.CannotReassign(variable)
             }
-            is DeclareExpr -> {
-                val type = resolver.resolveType(c.typeId)
-                val variable = Variable(c.id, type, c.isMutable)
-                resolver.add(variable)
-                manager.addPending(Instruction.AssignInstr(variable))
-            }
+            is DeclareExpr -> declare(c)
             is CallExpr -> {
                 val resolved = resolver.resolveFunc(c.functionId)
                 val paramNum = resolved.paramTypes.size
