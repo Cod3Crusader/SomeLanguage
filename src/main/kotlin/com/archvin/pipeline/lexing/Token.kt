@@ -1,6 +1,6 @@
 package com.archvin.pipeline.lexing
 
-import com.archvin.data.variable.Literal
+import com.archvin.data.Literal
 import com.archvin.utils.Debug
 
 sealed class Token(val raw: String) : Debug() {

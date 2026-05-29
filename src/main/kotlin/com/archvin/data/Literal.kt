@@ -1,6 +1,5 @@
-package com.archvin.data.variable
+package com.archvin.data
 
-import com.archvin.data.HasType
 import com.archvin.data.type.BuiltinType
 import com.archvin.utils.Debug
 

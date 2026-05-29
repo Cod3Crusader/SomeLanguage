@@ -1,7 +1,7 @@
 package com.archvin.pipeline.parsing
 
+import com.archvin.data.Literal
 import com.archvin.data.value.FunctionValue
-import com.archvin.data.variable.Literal
 import com.archvin.utils.Debug
 import com.archvin.utils.funSignature
 

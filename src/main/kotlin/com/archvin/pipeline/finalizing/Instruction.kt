@@ -1,9 +1,9 @@
 package com.archvin.pipeline.finalizing
 
 import com.archvin.data.HasType
+import com.archvin.data.Literal
 import com.archvin.data.type.BuiltinType.VoidType
 import com.archvin.data.type.Type
-import com.archvin.data.variable.Literal
 import com.archvin.data.variable.Symbol
 import com.archvin.data.variable.Symbol.Variable
 import com.archvin.utils.Debug

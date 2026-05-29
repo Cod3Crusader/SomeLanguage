@@ -1,6 +1,6 @@
 package com.archvin.pipeline.lexing
 
-import com.archvin.data.variable.Literal
+import com.archvin.data.Literal
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.Stage
 import com.archvin.reader.Reader
