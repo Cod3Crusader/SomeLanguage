@@ -1,4 +1,4 @@
-package com.archvin.token
+package com.archvin.pipeline.lexing
 
 import com.archvin.utils.Debug
 import com.archvin.variable.Literal

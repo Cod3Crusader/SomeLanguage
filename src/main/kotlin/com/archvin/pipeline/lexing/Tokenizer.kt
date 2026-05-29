@@ -1,11 +1,11 @@
-package com.archvin.token
+package com.archvin.pipeline.lexing
 
-import com.archvin.Processor
 import com.archvin.exceptions.CompileError
+import com.archvin.pipeline.Stage
 import com.archvin.reader.Reader
 import com.archvin.variable.Literal
 
-class Tokenizer : Processor<Token, Char>() {
+class Tokenizer : Stage<Token, Char>() {
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'
 
     private fun parseEscape(c: Char): Char = when (c) {

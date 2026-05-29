@@ -1,14 +1,12 @@
-package com.archvin.parser
+package com.archvin.pipeline.parsing
 
-import com.archvin.Processor
 import com.archvin.exceptions.CompileError
-import com.archvin.token.SpecialToken
-import com.archvin.token.Token
-import com.archvin.token.Token.IdentifierToken
-import com.archvin.type.Type
-import com.archvin.variable.Variable
+import com.archvin.pipeline.Stage
+import com.archvin.pipeline.lexing.SpecialToken
+import com.archvin.pipeline.lexing.Token
+import com.archvin.pipeline.lexing.Token.IdentifierToken
 
-class Parser(private val resolver: Resolver) : Processor<Expression, Token>() {
+class Parser : Stage<Expression, Token>() {
     private var callStack = ArrayDeque<Expression.CallExpr>()
 
     override fun yield(add: Expression) {
@@ -42,9 +40,27 @@ class Parser(private val resolver: Resolver) : Processor<Expression, Token>() {
         }
     }
 
-    private fun parseIdentifier(id: String) {
-        val resolved = resolver.resolve(id)
+    private fun parseDeclaration(id: String, typeId: String) {
+        if (r.step() is SpecialToken.Assignment) {
+            yield(Expression.DeclareExpr(id, typeId, true))
+        }
+        /*
+        else if (r.current() is SpecialToken.OpenBracket) {
+            val paramTypes = arrayListOf<String>()
+            while (true) {
+                val id = (r.step() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
+                paramTypes.add(id)
 
+                if (r.step() is SpecialToken.CloseBracket) break
+                else if (r.current() !is SpecialToken.Comma) throw CompileError.UnexpectedError(",", r.current().raw)
+            }
+            header.elements.add(HeaderElement.FunctionDeclaration(id, typeId, paramTypes))
+        }
+        */
+        else throw CompileError.UninitializedError(id)
+    }
+
+    private fun parseIdentifier(id: String) {
         when (val next = r.step()) {
             SpecialToken.Assignment -> {
                 yield(Expression.AssignExpr(id))
@@ -56,15 +72,8 @@ class Parser(private val resolver: Resolver) : Processor<Expression, Token>() {
                 callStack.add(call)
             }
 
-            is IdentifierToken -> {
-                if (resolved is Type) {
-                    val variable = Variable.Mutable(next.id, resolved)
-                    resolver.add(variable)
-                    yield(Expression.AssignExpr(variable.id))
+            is IdentifierToken -> parseDeclaration(next.id, id)
 
-                    if (r.step() !is SpecialToken.Assignment) throw CompileError.UninitializedError(variable)
-                } else throw CompileError.UnexpectedError("expression", id)
-            }
 
             else -> {
                 r.back()

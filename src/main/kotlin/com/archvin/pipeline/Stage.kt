@@ -1,8 +1,8 @@
-package com.archvin
+package com.archvin.pipeline
 
 import com.archvin.reader.Reader
 
-abstract class Processor<T, R> {
+abstract class Stage<T, R> {
     protected lateinit var r: Reader<R>
     private val ret = mutableListOf<T>()
 

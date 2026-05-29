@@ -1,6 +1,5 @@
-package com.archvin.program
+package com.archvin.pipeline.finalizing
 
-import com.archvin.exceptions.CompileError
 import com.archvin.type.BuiltinType.VoidType
 import com.archvin.type.HasType
 import com.archvin.type.Type
@@ -15,11 +14,7 @@ sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : 
     }
 
     class ReadInstr(val variable: Variable) : Instruction(variable.type, emptyList()) {}
-    class AssignInstr(val variable: Variable) : Instruction(variable.type, listOf(variable.type)) {
-        init {
-            if (variable is Variable.Constant) throw CompileError.CannotReassign(variable)
-        }
-    }
+    class AssignInstr(val variable: Variable) : Instruction(variable.type, listOf(variable.type))
 
     class CallInstr(val function: FunctionValue) : Instruction(function.returnType, function.paramTypes)
 

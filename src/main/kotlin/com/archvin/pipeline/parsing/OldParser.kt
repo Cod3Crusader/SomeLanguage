@@ -1,11 +1,11 @@
-package com.archvin.parser
+package com.archvin.pipeline.parsing
 
-import com.archvin.Processor
 import com.archvin.exceptions.CompileError
-import com.archvin.program.Instruction
+import com.archvin.pipeline.Stage
+import com.archvin.pipeline.finalizing.Instruction
+import com.archvin.pipeline.lexing.SpecialToken
+import com.archvin.pipeline.lexing.Token
 import com.archvin.reader.Reader
-import com.archvin.token.SpecialToken
-import com.archvin.token.Token
 import com.archvin.type.BuiltinType
 import com.archvin.type.HasId
 import com.archvin.type.Type
@@ -13,8 +13,8 @@ import com.archvin.variable.FunctionValue
 import com.archvin.variable.Variable
 import java.util.*
 
-@Deprecated("Now split into a parser and type checker", replaceWith = ReplaceWith("Parser", "com/archvin/process/Parser.kt"))
-class OldParser : Processor<Instruction, Token>() {
+@Deprecated("Now split into a parsing and type checker", replaceWith = ReplaceWith("Parser", "com/archvin/process/Parser.kt"))
+class OldParser : Stage<Instruction, Token>() {
     private val manager = InstructionManager()
     private val resolver = Resolver()
 
@@ -34,7 +34,7 @@ class OldParser : Processor<Instruction, Token>() {
 
         val id = nextToken.id
 
-        val variable = Variable.Mutable(id, t)
+        val variable = Variable(id, t, true)
         resolver.add(variable)
 
         manager.addPending(Instruction.AssignInstr(variable))
@@ -60,7 +60,7 @@ class OldParser : Processor<Instruction, Token>() {
             is Variable -> {
                 when (r.step()) {
                     is SpecialToken.OpenBracket -> parseCall(resolved)
-                    is SpecialToken.Assignment -> manager.addPending(Instruction.AssignInstr(resolved))
+                    is SpecialToken.Assignment -> manager.addPending(Instruction.AssignInstr(resolved as Variable))
                     else -> {
                         manager.addPending(Instruction.ReadInstr(resolved))
                         r.back()
@@ -154,8 +154,8 @@ class OldParser : Processor<Instruction, Token>() {
             add(BuiltinType.StrType)
             add(BuiltinType.VoidType)
 
-            add(Variable.Constant("println", FunctionValue.BuiltinFunction.Println))
-            add(Variable.Constant("add", FunctionValue.BuiltinFunction.Add))
+            add(Variable("println", FunctionValue.BuiltinFunction.Println))
+            add(Variable("add", FunctionValue.BuiltinFunction.Add))
         }
 
         fun add(value: HasId) {
@@ -166,6 +166,6 @@ class OldParser : Processor<Instruction, Token>() {
 
         fun resolve(id: String): HasId? = map[id]
         fun resolveType(id: String): Type? = map[id] as? Type
-        fun resolveVar(id: String): Variable.Mutable? = map[id] as? Variable.Mutable
+        fun resolveVar(id: String): Variable? = map[id] as? Variable
     }
 }

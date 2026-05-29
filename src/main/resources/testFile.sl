@@ -12,7 +12,7 @@ str world = "World"
 println(world)
 */
 
-//void greet(str name)
+//void div(i32, i32)
 /*{
     println("Hello")
     println(name)

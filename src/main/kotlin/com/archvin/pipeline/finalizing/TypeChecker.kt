@@ -1,26 +1,55 @@
-package com.archvin.parser
+package com.archvin.pipeline.finalizing
 
-import com.archvin.Processor
 import com.archvin.exceptions.CompileError
-import com.archvin.program.Instruction
+import com.archvin.pipeline.Stage
+import com.archvin.pipeline.parsing.Expression
+import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
+import com.archvin.variable.Variable
 
-class TypeChecker(private val resolver : Resolver) : Processor<Instruction, Expression>() {
+class TypeChecker : Stage<Instruction, Expression>() {
+    private val resolver = NameResolver()
     private val manager = InstructionManager()
+
+    /*
+    private fun parseHeader(header: Header) {
+        for (element in header.elements) {
+            when (element) {
+                is HeaderElement.FunctionDeclaration -> {
+                    val returnType = resolver.resolveType(element.returnId)
+                    val paramTypes = element.paramTypeIds.map { resolver.resolveType(it) }
+                    resolver.add(Variable(element.functionId, FunctionValue.CustomFunction(returnType, paramTypes, emptyList())))
+                    // TODO: instructions
+                }
+            }
+        }
+    }
+    *
+     */
 
     override fun step(c: Expression) {
         when (c) {
-            is Expression.ReadExpr -> manager.addComplete(Instruction.ReadInstr(resolver.resolveVar(c.id)))
-            is Expression.LitExpr<*> -> manager.addComplete(Instruction.LitInstr(c.lit))
-            is Expression.AssignExpr -> manager.addPending(Instruction.AssignInstr(resolver.resolveVar(c.variableId)))
-            is Expression.CallExpr -> {
+            is ReadExpr -> manager.addComplete(Instruction.ReadInstr(resolver.resolveVar(c.id)))
+            is LitExpr<*> -> manager.addComplete(Instruction.LitInstr(c.lit))
+            is AssignExpr -> {
+                val variable = resolver.resolveVar(c.variableId)
+                manager.addPending(Instruction.AssignInstr(variable))
+                if (!variable.isMutable) throw CompileError.CannotReassign(variable)
+            }
+            is DeclareExpr -> {
+                val type = resolver.resolveType(c.typeId)
+                val variable = Variable(c.id, type, c.isMutable)
+                resolver.add(variable)
+                manager.addPending(Instruction.AssignInstr(variable))
+            }
+            is CallExpr -> {
                 val resolved = resolver.resolveFunc(c.functionId)
                 val paramNum = resolved.paramTypes.size
                 if (c.paramNum != paramNum) throw CompileError.InvalidArgumentCount(c.functionId, paramNum, c.paramNum)
                 manager.addPending(Instruction.CallInstr(resolved))
             }
-            is Expression.OpExpr -> {}
-            is Expression.PassExpr -> TODO("remove this sometime")
+            is OpExpr -> TODO()
+            is PassExpr -> TODO("remove this sometime")
         }
     }
 

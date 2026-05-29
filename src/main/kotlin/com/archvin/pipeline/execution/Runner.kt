@@ -1,12 +1,13 @@
-package com.archvin.program
+package com.archvin.pipeline.execution
 
-import com.archvin.Processor
+import com.archvin.pipeline.Stage
+import com.archvin.pipeline.finalizing.Instruction
 import com.archvin.type.BuiltinType
 import com.archvin.variable.FunctionValue
 import com.archvin.variable.Value
 import java.util.*
 
-class Runner : Processor<Unit, Instruction>() {
+class Runner : Stage<Unit, Instruction>() {
     val stack: Stack<Value> = Stack()
 
     fun execute(instr: Instruction) {

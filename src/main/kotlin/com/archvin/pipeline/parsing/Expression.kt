@@ -1,4 +1,4 @@
-package com.archvin.parser
+package com.archvin.pipeline.parsing
 
 import com.archvin.utils.Debug
 import com.archvin.variable.FunctionValue
@@ -17,6 +17,8 @@ sealed class Expression : Debug() {
             return "${super.toString()} $paramNum"
         }
     }
+
+    class DeclareExpr(val id: String, val typeId: String, val isMutable: Boolean) : Expression()
 
     object PassExpr : Expression()
 }

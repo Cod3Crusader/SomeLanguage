@@ -1,4 +1,4 @@
-package com.archvin.parser
+package com.archvin.pipeline.finalizing
 
 import com.archvin.exceptions.CompileError
 import com.archvin.type.BuiltinType
@@ -7,7 +7,7 @@ import com.archvin.type.Type
 import com.archvin.variable.FunctionValue
 import com.archvin.variable.Variable
 
-class Resolver {
+class NameResolver {
     private val map = mutableMapOf<String, HasId>()
 
     init {
@@ -16,8 +16,8 @@ class Resolver {
         add(BuiltinType.StrType)
         add(BuiltinType.VoidType)
 
-        add(Variable.Constant("println", FunctionValue.BuiltinFunction.Println))
-        add(Variable.Constant("add", FunctionValue.BuiltinFunction.Add))
+        add(Variable("println", FunctionValue.BuiltinFunction.Println))
+        add(Variable("add", FunctionValue.BuiltinFunction.Add))
     }
 
     fun add(value: HasId) {
