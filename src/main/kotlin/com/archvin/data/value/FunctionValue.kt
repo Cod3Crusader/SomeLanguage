@@ -1,7 +1,7 @@
-package com.archvin.variable
+package com.archvin.data.value
 
 import com.archvin.pipeline.finalizing.Instruction
 
-abstract class FunctionValue : Value() {
+sealed class FunctionValue : Value() {
     class CustomFunction(val instructions: List<Instruction>) : FunctionValue()
 }

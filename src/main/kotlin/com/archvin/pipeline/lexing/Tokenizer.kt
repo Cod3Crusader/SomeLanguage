@@ -1,9 +1,9 @@
 package com.archvin.pipeline.lexing
 
+import com.archvin.data.variable.Literal
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.Stage
 import com.archvin.reader.Reader
-import com.archvin.variable.Literal
 
 class Tokenizer : Stage<Token, Char>() {
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'

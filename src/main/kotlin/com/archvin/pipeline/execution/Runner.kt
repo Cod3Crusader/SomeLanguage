@@ -1,10 +1,10 @@
 package com.archvin.pipeline.execution
 
+import com.archvin.data.type.BuiltinType
+import com.archvin.data.value.Value
+import com.archvin.data.variable.BuiltinFunction
 import com.archvin.pipeline.Stage
 import com.archvin.pipeline.finalizing.Instruction
-import com.archvin.type.BuiltinType
-import com.archvin.variable.BuiltinFunction
-import com.archvin.variable.Value
 import java.util.*
 
 class Runner : Stage<Unit, Instruction>() {

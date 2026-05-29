@@ -1,4 +1,4 @@
-package com.archvin.variable
+package com.archvin.data.value
 
 import com.archvin.utils.Debug
 

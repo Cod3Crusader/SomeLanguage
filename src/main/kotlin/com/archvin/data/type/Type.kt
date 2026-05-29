@@ -1,6 +1,7 @@
-package com.archvin.type
+package com.archvin.data.type
 
-import com.archvin.type.BuiltinType.DebugType
+import com.archvin.data.HasId
+import com.archvin.data.type.BuiltinType.DebugType
 import com.archvin.utils.Debug
 import com.archvin.utils.funSignature
 

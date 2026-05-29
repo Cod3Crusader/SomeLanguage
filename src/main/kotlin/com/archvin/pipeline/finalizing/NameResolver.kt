@@ -1,12 +1,12 @@
 package com.archvin.pipeline.finalizing
 
+import com.archvin.data.HasId
+import com.archvin.data.type.BuiltinType
+import com.archvin.data.type.Type
+import com.archvin.data.variable.BuiltinFunction
+import com.archvin.data.variable.Symbol
+import com.archvin.data.variable.Symbol.Variable
 import com.archvin.exceptions.CompileError
-import com.archvin.type.BuiltinType
-import com.archvin.type.HasId
-import com.archvin.type.Type
-import com.archvin.variable.BuiltinFunction
-import com.archvin.variable.VariableLike
-import com.archvin.variable.VariableLike.Variable
 
 class NameResolver {
     private val map = mutableMapOf<String, HasId>()
@@ -30,7 +30,7 @@ class NameResolver {
     fun tryResolve(id: String): HasId? = map[id]
     fun resolve(id: String): HasId = map[id] ?: throw CompileError.UnresolvedIdentifier(id)
     fun resolveType(id: String) = map[id] as? Type ?: throw CompileError.UnresolvedIdentifier(id)
-    fun resolveFunc(id: String) = map[id] as? VariableLike.Function ?: throw CompileError.UnresolvedIdentifier(id)
+    fun resolveFunc(id: String) = map[id] as? Symbol.Function ?: throw CompileError.UnresolvedIdentifier(id)
     fun resolveVar(id: String) = map[id] as? Variable ?: throw CompileError.UnresolvedIdentifier(id)
 
 }

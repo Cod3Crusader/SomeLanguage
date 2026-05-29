@@ -1,5 +1,6 @@
-package com.archvin.type
+package com.archvin.data
 
+import com.archvin.data.type.Type
 import com.archvin.exceptions.CompileError
 
 interface HasType {

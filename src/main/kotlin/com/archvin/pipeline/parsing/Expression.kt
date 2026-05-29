@@ -1,9 +1,9 @@
 package com.archvin.pipeline.parsing
 
+import com.archvin.data.value.FunctionValue
+import com.archvin.data.variable.Literal
 import com.archvin.utils.Debug
 import com.archvin.utils.funSignature
-import com.archvin.variable.FunctionValue
-import com.archvin.variable.Literal
 
 sealed class Expression : Debug() {
     class ReadExpr(val id: String) : Expression()

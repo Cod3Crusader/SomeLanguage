@@ -1,9 +1,10 @@
-package com.archvin.variable
+package com.archvin.data.variable
 
-import com.archvin.type.BuiltinType
-import com.archvin.type.Type
+import com.archvin.data.type.BuiltinType
+import com.archvin.data.type.Type
+import com.archvin.data.value.Value
 
-sealed class BuiltinFunction(id: String, retType: BuiltinType<*>, paramTypes: List<BuiltinType<*>>) : VariableLike.Function(id, Type.FunctionType(retType, paramTypes)) {
+sealed class BuiltinFunction(id: String, retType: BuiltinType<*>, paramTypes: List<BuiltinType<*>>) : Symbol.Function(id, Type.FunctionType(retType, paramTypes)) {
 
     abstract fun call(args: List<Value>): Value
 

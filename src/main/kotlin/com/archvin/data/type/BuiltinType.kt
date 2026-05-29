@@ -1,4 +1,4 @@
-package com.archvin.type
+package com.archvin.data.type
 
 sealed class BuiltinType<out T>(override val id: String) : Type.ObjectType(id) {
     override val className = "${id}T"

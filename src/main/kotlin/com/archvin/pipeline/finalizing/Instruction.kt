@@ -1,12 +1,12 @@
 package com.archvin.pipeline.finalizing
 
-import com.archvin.type.BuiltinType.VoidType
-import com.archvin.type.HasType
-import com.archvin.type.Type
+import com.archvin.data.HasType
+import com.archvin.data.type.BuiltinType.VoidType
+import com.archvin.data.type.Type
+import com.archvin.data.variable.Literal
+import com.archvin.data.variable.Symbol
+import com.archvin.data.variable.Symbol.Variable
 import com.archvin.utils.Debug
-import com.archvin.variable.Literal
-import com.archvin.variable.VariableLike
-import com.archvin.variable.VariableLike.Variable
 
 sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : Debug(), HasType {
     class LitInstr<out T>(val lit: Literal<T>) : Instruction(lit.type, emptyList()) {
@@ -16,7 +16,7 @@ sealed class Instruction(override val type: Type, val paramTypes: List<Type>) : 
     class ReadInstr(val variable: Variable) : Instruction(variable.type, emptyList()) {}
     class AssignInstr(val variable: Variable) : Instruction(variable.type, listOf(variable.type))
 
-    class CallInstr(val function: VariableLike.Function) : Instruction(function.type.retType, function.type.paramTypes)
+    class CallInstr(val function: Symbol.Function) : Instruction(function.type.retType, function.type.paramTypes)
 
     object PassInstr : Instruction(VoidType, listOf())
 }

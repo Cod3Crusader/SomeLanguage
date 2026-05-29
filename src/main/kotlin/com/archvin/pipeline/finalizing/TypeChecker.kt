@@ -1,12 +1,12 @@
 package com.archvin.pipeline.finalizing
 
+import com.archvin.data.type.Type
+import com.archvin.data.variable.Symbol.Variable
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.Stage
 import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
-import com.archvin.type.Type
-import com.archvin.variable.VariableLike.Variable
 
 class TypeChecker : Stage<Instruction, Expression>() {
     private val resolver = NameResolver()

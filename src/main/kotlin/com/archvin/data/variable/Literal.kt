@@ -1,7 +1,7 @@
-package com.archvin.variable
+package com.archvin.data.variable
 
-import com.archvin.type.BuiltinType
-import com.archvin.type.HasType
+import com.archvin.data.HasType
+import com.archvin.data.type.BuiltinType
 import com.archvin.utils.Debug
 
 sealed class Literal<out T>(val value: T) : Debug(), HasType {
