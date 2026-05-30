@@ -1,7 +1,9 @@
 package com.archvin.pipeline.finalizing
 
+import com.archvin.data.type.BuiltinType.VoidType
 import com.archvin.data.type.Type
-import com.archvin.data.value.FunctionBody.CustomFunction
+import com.archvin.data.value.LambdaVal
+import com.archvin.data.value.Value
 import com.archvin.data.variable.Symbol
 import com.archvin.data.variable.Symbol.Variable
 import com.archvin.exceptions.CompileError
@@ -10,12 +12,15 @@ import com.archvin.pipeline.finalizing.Instruction.*
 import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
+import com.archvin.utils.Debug
 
 class TypeChecker : Stage<Instruction, Expression>() {
     private val resolver = NameResolver()
-    private val manager = InstructionManager()
+    private val topManager = InstructionManager()
 
     private val scopeStack = ArrayDeque<PendingScope>()
+
+    private fun manager() = scopeStack.lastOrNull()?.manager ?: topManager
 
     fun declare(c: DeclareExpr) {
         if (c !is DeclareExpr.FunDeclare) {
@@ -23,7 +28,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
             val type = resolver.resolveType(c.typeId)
             val variable = Variable(c.id, type, c.isMutable)
             resolver.add(variable)
-            manager.addPending(AssignInstr(variable))
+            manager().addPending(AssignInstr(variable))
         } else {
             val type =
                  Type.FunctionType(
@@ -31,21 +36,11 @@ class TypeChecker : Stage<Instruction, Expression>() {
                     c.paramTypes.map { resolver.resolveType(it) }
                 )
 
-            val lambda = r.step()
-            if (lambda !is LambdaExpr) throw CompileError.UninitializedError(c.id)
+            if (r.peek() !is LambdaExpr) throw CompileError.UninitializedError(c.id)
 
-            scopeStack.add(PendingScope())
-
-            if (manager.hasPending()) error("useful message")
-            for (i in 1 .. lambda.exprNum) {
-                step(r.step())
-            }
-            if (manager.hasPending()) error("useful message")
-
-            val variable = Symbol.Function.CustomFunction(
-                c.id, type, CustomFunction(scopeStack.removeLast().instructions)
-            )
+            val variable = Symbol.Function.CustomFunction(c.id, type)
             resolver.add(variable)
+            manager().addPending(AssignInstr(variable))
         }
     }
 
@@ -56,11 +51,11 @@ class TypeChecker : Stage<Instruction, Expression>() {
 
     override fun step(c: Expression) {
         when (c) {
-            is ReadExpr -> manager.addComplete(ReadInstr(resolver.resolveVar(c.id)))
-            is LitExpr<*> -> manager.addComplete(LitInstr(c.lit))
+            is ReadExpr -> manager().addComplete(ReadInstr(resolver.resolveVar(c.id)))
+            is LitExpr<*> -> manager().addComplete(LitInstr(Value.Primitive(c.lit.value), c.lit.type))
             is AssignExpr -> {
                 val variable = resolver.resolveVar(c.variableId)
-                manager.addPending(AssignInstr(variable))
+                manager().addPending(AssignInstr(variable))
                 if (!variable.isMutable) throw CompileError.CannotReassign(variable)
             }
             is DeclareExpr -> declare(c)
@@ -68,11 +63,22 @@ class TypeChecker : Stage<Instruction, Expression>() {
                 val resolved = resolver.resolveFunc(c.functionId)
                 val paramNum = resolved.type.paramTypes.size
                 if (c.paramNum != paramNum) throw CompileError.InvalidArgumentCount(c.functionId, paramNum, c.paramNum)
-                manager.addPending(CallInstr(resolved))
+
+                manager().addPending(CallInstr(resolved))
             }
 
             is LambdaExpr -> {
+                scopeStack.add(PendingScope())
 
+                val top = manager().peek()
+
+                for (i in 1 .. c.exprNum) {
+                    step(r.step())
+                }
+                if (manager().peek() != top) error("useful message")
+
+                val lambda = LambdaVal.Composite(scopeStack.removeLast().instructions)
+                manager().addComplete(LitInstr(lambda, Type.FunctionType(VoidType, emptyList())))
             }
 
             is OpExpr -> TODO()
@@ -83,13 +89,13 @@ class TypeChecker : Stage<Instruction, Expression>() {
     override fun process(r: Reader<Expression>): List<Instruction> {
         val ret = super.process(r)
 
-        if (manager.hasPending()) error("unfinished scope or instruction")
+        if (manager().hasPending()) error("unfinished scope or instruction")
 
         return ret
     }
 
     private inner class InstructionManager {
-        inner class PendingInstruction(val instr: Instruction, var counter: Int)
+        inner class PendingInstruction(val instr: Instruction, var counter: Int) : Debug()
 
         private val instrStack = ArrayDeque<PendingInstruction>()
 
@@ -134,5 +140,8 @@ class TypeChecker : Stage<Instruction, Expression>() {
         }
     }
 
-    private class PendingScope { val instructions = arrayListOf<Instruction>() }
+    private inner class PendingScope {
+        val manager = InstructionManager()
+        val instructions = arrayListOf<Instruction>()
+    }
 }

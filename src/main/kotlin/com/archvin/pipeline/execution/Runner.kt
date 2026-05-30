@@ -13,8 +13,8 @@ class Runner : Stage<Unit, Instruction>() {
 
     fun execute(instr: Instruction) {
         when (instr) {
-            is Instruction.LitInstr<*> -> {
-                stack.push(Value.PrimitiveValue(instr.lit.value))
+            is Instruction.LitInstr -> {
+                stack.push(instr.value)
             }
             is Instruction.ReadInstr -> {
                 stack.push(instr.variable.getValue())

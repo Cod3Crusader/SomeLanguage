@@ -1,7 +1,7 @@
 package com.archvin.pipeline.parsing
 
 import com.archvin.data.Literal
-import com.archvin.data.value.FunctionBody
+import com.archvin.data.value.LambdaVal
 import com.archvin.utils.Debug
 import com.archvin.utils.funSignature
 
@@ -10,7 +10,7 @@ sealed class Expression : Debug() {
     class LitExpr<out T>(val lit: Literal<T>) : Expression()
     class AssignExpr(val variableId: String) : Expression()
 
-    class OpExpr(val operationFun: FunctionBody) : Expression()
+    class OpExpr(val operationFun: LambdaVal) : Expression()
 
     // TODO: use val
     class CallExpr(val functionId: String, var paramNum: Int = 0) : Expression()
