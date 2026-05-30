@@ -3,6 +3,7 @@ package com.archvin.pipeline.lexing
 import com.archvin.data.Literal
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.Stage
+import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.reader.Reader
 
 class Tokenizer : Stage<Token, Char>() {
@@ -41,17 +42,17 @@ class Tokenizer : Stage<Token, Char>() {
                 Token.LiteralToken(Literal.CharLiteral(char))
             }
 
-            '(' -> SpecialToken.OpenBracket
-            ')' -> SpecialToken.CloseBracket
-            '{' -> Token.Test("{")
-            '}' -> Token.Test("}")
-            ',' -> SpecialToken.Comma
+            '(' -> OpenBracket
+            ')' -> CloseBracket
+            '{' -> OpenBraces
+            '}' -> CloseBraces
+            ',' -> Comma
             '&' -> Token.Test("&")
-            '=' -> SpecialToken.Assignment
-            '+' -> SpecialToken.Addition
-            '-' -> SpecialToken.Subtraction
-            '*' -> SpecialToken.Multiplication
-            '/' -> SpecialToken.Division
+            '=' -> Assignment
+            '+' -> Addition
+            '-' -> Subtraction
+            '*' -> Multiplication
+            '/' -> Division
             else -> throw CompileError.UnknownCharacterError("$c")
         }
     }

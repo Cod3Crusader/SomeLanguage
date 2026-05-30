@@ -16,6 +16,7 @@ abstract class Debug {
             ?.mapNotNull { param ->
                 this::class.memberProperties
                     .find { it.name == param.name }
+                    //?.takeIf { it.getter.isOpen }
                     ?.let { "${it.getter.call(this)}" }
             }
             ?.joinToString(", ")

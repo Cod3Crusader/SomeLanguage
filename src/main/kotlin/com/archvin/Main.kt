@@ -1,5 +1,7 @@
 package com.archvin
 
+import com.archvin.pipeline.execution.Runner
+import com.archvin.pipeline.finalizing.Instruction
 import com.archvin.pipeline.finalizing.NameResolver
 import com.archvin.pipeline.finalizing.TypeChecker
 import com.archvin.pipeline.lexing.SpecialToken
@@ -27,12 +29,12 @@ fun main(args: Array<String>) {
 
     val tokens = Tokenizer().process(charReader)
     val expr = Parser().process(SimpleReader(tokens, SpecialToken.NewLine))
-    expr.forEach { println(it) }
+    //expr.forEach { println(it) }
     val instr = TypeChecker().process(SimpleReader(expr, Expression.PassExpr))
     println()
     instr.forEach { println(it) }
 
 
-    //println()
-    //Runner().process(SimpleReader(instr, Instruction.PassInstr))
+    println()
+    Runner().process(SimpleReader(instr, Instruction.PassInstr))
 }

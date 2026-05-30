@@ -1,9 +1,12 @@
 package com.archvin.pipeline.finalizing
 
 import com.archvin.data.type.Type
+import com.archvin.data.value.FunctionBody.CustomFunction
+import com.archvin.data.variable.Symbol
 import com.archvin.data.variable.Symbol.Variable
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.Stage
+import com.archvin.pipeline.finalizing.Instruction.*
 import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
@@ -12,28 +15,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
     private val resolver = NameResolver()
     private val manager = InstructionManager()
 
-    /*
-    private fun parseHeader(header: Header) {
-        for (element in header.elements) {
-            when (element) {
-                is HeaderElement.FunctionDeclaration -> {
-                    val returnType = resolver.resolveType(element.returnId)
-                    val paramTypes = element.paramTypeIds.map { resolver.resolveType(it) }
-                    resolver.add(Variable(element.functionId, FunctionValue.CustomFunction(returnType, paramTypes, emptyList())))
-                    // TODO: instructions
-                }
-            }
-        }
-    }
-    *
-     */
-
-    /*
-    private fun <T : HasId> String.resolve(): T {
-        @Suppress("UNCHECKED_CAST")
-        return resolver.tryResolve(this) as? T ?: throw CompileError.UnresolvedIdentifier(this)
-    }
-     */
+    private val scopeStack = ArrayDeque<PendingScope>()
 
     fun declare(c: DeclareExpr) {
         if (c !is DeclareExpr.FunDeclare) {
@@ -41,7 +23,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
             val type = resolver.resolveType(c.typeId)
             val variable = Variable(c.id, type, c.isMutable)
             resolver.add(variable)
-            manager.addPending(Instruction.AssignInstr(variable))
+            manager.addPending(AssignInstr(variable))
         } else {
             val type =
                  Type.FunctionType(
@@ -49,18 +31,36 @@ class TypeChecker : Stage<Instruction, Expression>() {
                     c.paramTypes.map { resolver.resolveType(it) }
                 )
 
-            val variable = Variable(c.id, type, false)
+            val lambda = r.step()
+            if (lambda !is LambdaExpr) throw CompileError.UninitializedError(c.id)
+
+            scopeStack.add(PendingScope())
+
+            if (manager.hasPending()) error("useful message")
+            for (i in 1 .. lambda.exprNum) {
+                step(r.step())
+            }
+            if (manager.hasPending()) error("useful message")
+
+            val variable = Symbol.Function.CustomFunction(
+                c.id, type, CustomFunction(scopeStack.removeLast().instructions)
+            )
             resolver.add(variable)
         }
     }
 
+    override fun yield(add: Instruction) {
+        if (scopeStack.isEmpty()) super.yield(add)
+        else scopeStack.last().instructions.add(add)
+    }
+
     override fun step(c: Expression) {
         when (c) {
-            is ReadExpr -> manager.addComplete(Instruction.ReadInstr(resolver.resolveVar(c.id)))
-            is LitExpr<*> -> manager.addComplete(Instruction.LitInstr(c.lit))
+            is ReadExpr -> manager.addComplete(ReadInstr(resolver.resolveVar(c.id)))
+            is LitExpr<*> -> manager.addComplete(LitInstr(c.lit))
             is AssignExpr -> {
                 val variable = resolver.resolveVar(c.variableId)
-                manager.addPending(Instruction.AssignInstr(variable))
+                manager.addPending(AssignInstr(variable))
                 if (!variable.isMutable) throw CompileError.CannotReassign(variable)
             }
             is DeclareExpr -> declare(c)
@@ -68,8 +68,13 @@ class TypeChecker : Stage<Instruction, Expression>() {
                 val resolved = resolver.resolveFunc(c.functionId)
                 val paramNum = resolved.type.paramTypes.size
                 if (c.paramNum != paramNum) throw CompileError.InvalidArgumentCount(c.functionId, paramNum, c.paramNum)
-                manager.addPending(Instruction.CallInstr(resolved))
+                manager.addPending(CallInstr(resolved))
             }
+
+            is LambdaExpr -> {
+
+            }
+
             is OpExpr -> TODO()
             is PassExpr -> TODO("remove this sometime")
         }
@@ -78,7 +83,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
     override fun process(r: Reader<Expression>): List<Instruction> {
         val ret = super.process(r)
 
-        if (manager.hasPending()) throw CompileError.UnfinishedInstruction(manager.peek()!!.instr)
+        if (manager.hasPending()) error("unfinished scope or instruction")
 
         return ret
     }
@@ -86,11 +91,10 @@ class TypeChecker : Stage<Instruction, Expression>() {
     private inner class InstructionManager {
         inner class PendingInstruction(val instr: Instruction, var counter: Int)
 
-        private val pending = ArrayDeque<PendingInstruction>()
+        private val instrStack = ArrayDeque<PendingInstruction>()
 
-        fun peek() = pending.lastOrNull()
-
-        fun hasPending() = pending.isNotEmpty()
+        fun peek() = instrStack.lastOrNull()
+        fun hasPending() = instrStack.isNotEmpty()
 
         private fun checkType(instr: Instruction) {
             val top = peek() ?: return
@@ -102,7 +106,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
         private fun tryPop() {
             if (peek()?.counter != 0) return
 
-            val instr = pending.removeLastOrNull()!!.instr
+            val instr = instrStack.removeLastOrNull()!!.instr
             yield(instr)
 
             peek()?.counter--
@@ -113,7 +117,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
             checkType(instr)
 
             val counter = instr.paramTypes.size
-            pending.add(PendingInstruction(instr, counter))
+            instrStack.add(PendingInstruction(instr, counter))
 
            tryPop()
         }
@@ -129,4 +133,6 @@ class TypeChecker : Stage<Instruction, Expression>() {
             tryPop()
         }
     }
+
+    private class PendingScope { val instructions = arrayListOf<Instruction>() }
 }

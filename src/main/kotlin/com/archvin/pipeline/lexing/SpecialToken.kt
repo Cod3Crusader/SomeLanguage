@@ -10,4 +10,6 @@ sealed class SpecialToken(raw: String) : Token(raw) {
     object CloseBracket : SpecialToken(")")
     object Comma : SpecialToken(",")
     object NewLine : SpecialToken("newline")
+    object OpenBraces : SpecialToken("{")
+    object CloseBraces : SpecialToken("}")
 }

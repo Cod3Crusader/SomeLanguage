@@ -1,7 +1,7 @@
 package com.archvin.exceptions
 
 import com.archvin.data.type.Type
-import com.archvin.data.variable.Symbol.Variable
+import com.archvin.data.variable.Symbol
 import com.archvin.pipeline.finalizing.Instruction
 
 sealed class CompileError(errorMessage: String) : Exception(errorMessage) {
@@ -11,7 +11,7 @@ sealed class CompileError(errorMessage: String) : Exception(errorMessage) {
     class UnexpectedError(expected: String, got: String) : CompileError("Expected: \"$expected\", got \"$got\"")
     class UnclosedError(unclosed: String) : CompileError("Unclosed: \"$unclosed\"")
     class UninitializedError(id: String) : CompileError("\"$id\" cannot be uninitialized")
-    class CannotReassign(variable: Variable) : CompileError("Cannot reassign constant: \"${variable.id}\"")
+    class CannotReassign(variable: Symbol) : CompileError("Cannot reassign constant: \"${variable.id}\"")
     class InvalidCallError(tried: String) : CompileError("\"$tried\" cannot be called")
     class UnresolvedIdentifier(id: String) : CompileError("Unresolved identifier $id")
     class Redeclaration(id: String) : CompileError("Redeclaration for $id")

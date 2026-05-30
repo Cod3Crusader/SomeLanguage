@@ -4,8 +4,6 @@ import com.archvin.data.type.BuiltinType
 import com.archvin.utils.Debug
 
 sealed class Literal<out T>(val value: T) : Debug(), HasType {
-    abstract override val type: BuiltinType<T>
-
     class StringLiteral(value: String) : Literal<String>(value) {
         override val type = BuiltinType.StrType
     }

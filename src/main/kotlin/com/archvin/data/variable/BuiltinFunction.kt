@@ -1,36 +1,38 @@
 package com.archvin.data.variable
 
 import com.archvin.data.type.BuiltinType
+import com.archvin.data.type.BuiltinType.*
 import com.archvin.data.type.Type
+import com.archvin.data.value.FunctionBody
 import com.archvin.data.value.Value
 
-sealed class BuiltinFunction(id: String, retType: BuiltinType<*>, paramTypes: List<BuiltinType<*>>) : Symbol.Function(id, Type.FunctionType(retType, paramTypes)) {
+sealed class BuiltinFunction(
+    id: String,
+    retType: BuiltinType<*>,
+    paramTypes: List<BuiltinType<*>>,
+    body: (List<Value>) -> Value)
+    : Symbol.Function(id, Type.FunctionType(retType, paramTypes), FunctionBody.BuiltinFunction(body)
+) {
+    override fun getValue() = super.getValue() as FunctionBody.BuiltinFunction
 
-    abstract fun call(args: List<Value>): Value
 
     object Println : BuiltinFunction(
         "println",
-        BuiltinType.VoidType,
-        listOf(BuiltinType.DebugType)
-    ) {
-
-        override fun call(args: List<Value>): Value {
-            println(args[0])
-            return Value.Uninitialized
+        VoidType,
+        listOf(DebugType),
+        { args ->
+            println(args[0].asString())
+            Value.Uninitialized
         }
-    }
+    )
 
     object Add : BuiltinFunction(
         "add",
-        BuiltinType.I32Type,
-        listOf(BuiltinType.I32Type, BuiltinType.I32Type)
-    ) {
-        // TODO: remove
-
-        override fun call(args: List<Value>): Value {
-            val toAdd = args as List<Value.PrimitiveValue<Int>>
-            return Value.PrimitiveValue(toAdd[0].value + toAdd[1].value)
+        I32Type,
+        listOf(I32Type, I32Type),
+        { argsUncast ->
+            val args = argsUncast as List<Value.PrimitiveValue<Int>>
+            Value.PrimitiveValue(args[0].value + args[1].value)
         }
-
-    }
+    )
 }
