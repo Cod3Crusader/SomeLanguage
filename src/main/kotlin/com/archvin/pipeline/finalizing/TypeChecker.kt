@@ -28,7 +28,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
             val type = resolver.resolveType(c.typeId)
             val variable = Variable(c.id, type, c.isMutable)
             resolver.add(variable)
-            manager().addPending(AssignInstr(variable))
+            manager().addPending(AssignInstr(variable), listOf(variable.type))
         } else {
             val type =
                  Type.FunctionType(
@@ -40,7 +40,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
 
             val variable = Symbol.Function.CustomFunction(c.id, type)
             resolver.add(variable)
-            manager().addPending(AssignInstr(variable))
+            manager().addPending(AssignInstr(variable), listOf(variable.type))
         }
     }
 
@@ -51,11 +51,15 @@ class TypeChecker : Stage<Instruction, Expression>() {
 
     override fun step(c: Expression) {
         when (c) {
-            is ReadExpr -> manager().addComplete(ReadInstr(resolver.resolveVar(c.id)))
-            is LitExpr<*> -> manager().addComplete(LitInstr(Value.Primitive(c.lit.value), c.lit.type))
+            is ReadExpr -> {
+
+                val resolved = resolver.resolveVar(c.id)
+                manager().addComplete(ReadInstr(resolved), resolved.type)
+            }
+            is LitExpr<*> -> manager().addComplete(LitInstr(Value.Primitive(c.lit.value)), c.lit.type)
             is AssignExpr -> {
                 val variable = resolver.resolveVar(c.variableId)
-                manager().addPending(AssignInstr(variable))
+                manager().addPending(AssignInstr(variable), listOf(variable.type))
                 if (!variable.isMutable) throw CompileError.CannotReassign(variable)
             }
             is DeclareExpr -> declare(c)
@@ -64,7 +68,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
                 val paramNum = resolved.type.paramTypes.size
                 if (c.paramNum != paramNum) throw CompileError.InvalidArgumentCount(c.functionId, paramNum, c.paramNum)
 
-                manager().addPending(CallInstr(resolved))
+                manager().addPending(CallInstr(resolved), resolved.type.paramTypes, resolved.type.retType)
             }
 
             is LambdaExpr -> {
@@ -78,7 +82,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
                 if (manager().peek() != top) error("useful message")
 
                 val lambda = LambdaVal.Composite(scopeStack.removeLast().instructions)
-                manager().addComplete(LitInstr(lambda, Type.FunctionType(VoidType, emptyList())))
+                manager().addComplete(LitInstr(lambda), Type.FunctionType(VoidType, emptyList())) // TODO
             }
 
             is OpExpr -> TODO()
@@ -95,18 +99,21 @@ class TypeChecker : Stage<Instruction, Expression>() {
     }
 
     private inner class InstructionManager {
-        inner class PendingInstruction(val instr: Instruction, var counter: Int) : Debug()
+        inner class PendingInstruction(val instr: Instruction, val type: Type, val paramTypes: List<Type>) : Debug() {
+            var counter = paramTypes.size
+        }
 
         private val instrStack = ArrayDeque<PendingInstruction>()
 
         fun peek() = instrStack.lastOrNull()
         fun hasPending() = instrStack.isNotEmpty()
 
-        private fun checkType(instr: Instruction) {
+        private fun checkType(type: Type) {
             val top = peek() ?: return
 
-            val types = top.instr.paramTypes
-            instr.assertType(types[types.size - top.counter])
+            val types = top.paramTypes
+            val expected = types[types.size - top.counter]
+            if (expected != type) throw CompileError.TypeMismatchError(expected, type)
         }
 
         private fun tryPop() {
@@ -119,19 +126,18 @@ class TypeChecker : Stage<Instruction, Expression>() {
             tryPop()
         }
 
-        fun addPending(instr: Instruction) {
-            checkType(instr)
+        fun addPending(instr: Instruction, paramTypes: List<Type>, retType: Type = VoidType) {
+            checkType(retType)
 
-            val counter = instr.paramTypes.size
-            instrStack.add(PendingInstruction(instr, counter))
+            instrStack.add(PendingInstruction(instr, retType, paramTypes))
 
            tryPop()
         }
 
-        fun addComplete(instr: Instruction) {
-            assert(instr.paramTypes.isEmpty())
+        fun addComplete(instr: Instruction, type: Type) {
+            assert(instr.paramNum == 0)
 
-            checkType(instr)
+            checkType(type)
 
             yield(instr)
 
