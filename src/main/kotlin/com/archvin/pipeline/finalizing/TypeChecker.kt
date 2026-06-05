@@ -1,19 +1,6 @@
 package com.archvin.pipeline.finalizing
 
-import com.archvin.data.type.BuiltinType.VoidType
-import com.archvin.data.type.Type
-import com.archvin.data.value.LambdaVal
-import com.archvin.data.value.Value
-import com.archvin.data.variable.Symbol
-import com.archvin.data.variable.Symbol.Variable
-import com.archvin.exceptions.CompileError
-import com.archvin.pipeline.Stage
-import com.archvin.pipeline.finalizing.Instruction.*
-import com.archvin.pipeline.parsing.Expression
-import com.archvin.pipeline.parsing.Expression.*
-import com.archvin.reader.Reader
-import com.archvin.utils.Debug
-
+/*
 class TypeChecker : Stage<Instruction, Expression>() {
     private val resolver = NameResolver()
     private val topManager = InstructionManager()
@@ -44,12 +31,12 @@ class TypeChecker : Stage<Instruction, Expression>() {
         }
     }
 
-    override fun yield(add: Instruction) {
+    fun yield(add: Instruction) {
         if (scopeStack.isEmpty()) super.yield(add)
         else scopeStack.last().instructions.add(add)
     }
 
-    override fun step(c: Expression) {
+    override fun consume(c: Expression): Instruction {
         when (c) {
             is ReadExpr -> {
 
@@ -77,7 +64,7 @@ class TypeChecker : Stage<Instruction, Expression>() {
                 val top = manager().peek()
 
                 for (i in 1 .. c.exprNum) {
-                    step(r.step())
+                    consume(r.step())
                 }
                 if (manager().peek() != top) error("useful message")
 
@@ -151,3 +138,4 @@ class TypeChecker : Stage<Instruction, Expression>() {
         val instructions = arrayListOf<Instruction>()
     }
 }
+ */

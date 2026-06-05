@@ -1,6 +1,6 @@
 package com.archvin.reader
 
-sealed class Reader<out T>(val defaultValue: T) {
+sealed class Reader<out T> {
     var index : Int = 0
         protected set(value) { field = value.coerceIn(0, length()) }
 
@@ -16,7 +16,7 @@ sealed class Reader<out T>(val defaultValue: T) {
     fun back() { index-- }
 
     fun peek(i: Int = 1): T = get(index + i)
-    fun isEof(): Boolean = index >= length()
+    fun isEof(): Boolean = index >= length() - 1
 
     fun isEmpty(): Boolean = length() == 0
 }

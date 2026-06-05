@@ -9,7 +9,7 @@ sealed class CompileError(errorMessage: String) : Exception(errorMessage) {
         : CompileError("Expected type: ${expected.signature}, but received: ${got.signature}") {}
     class UnknownCharacterError(char: String) : CompileError("Unknown character '$char'")
     class UnexpectedError(expected: String, got: String) : CompileError("Expected: \"$expected\", got \"$got\"")
-    class UnclosedError(unclosed: String) : CompileError("Unclosed: \"$unclosed\"")
+    class UnfinishedError(unfinished: String) : CompileError("A(n) $unfinished was left unfinished")
     class UninitializedError(id: String) : CompileError("\"$id\" cannot be uninitialized")
     class CannotReassign(variable: Symbol) : CompileError("Cannot reassign constant: \"${variable.id}\"")
     class InvalidCallError(tried: String) : CompileError("\"$tried\" cannot be called")

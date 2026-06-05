@@ -27,7 +27,7 @@ class Tokenizer : Stage<Token, Char>() {
                     raw +=
                         if (r.current() == '\\') parseEscape(r.step())
                         else r.current()
-                    if (r.index == r.getAll().size - 1) throw CompileError.UnclosedError("string literal")
+                    if (r.index == r.getAll().size - 1) throw CompileError.UnfinishedError("string literal")
                 }
 
                 Token.LiteralToken(Literal.StringLiteral(raw))
@@ -37,13 +37,13 @@ class Tokenizer : Stage<Token, Char>() {
                 val char =
                     if (r.step() == '\\') parseEscape(r.step())
                     else r.current()
-                if (r.step() != '\'') throw CompileError.UnclosedError("character literal")
+                if (r.step() != '\'') throw CompileError.UnfinishedError("character literal")
 
                 Token.LiteralToken(Literal.CharLiteral(char))
             }
 
-            '(' -> OpenBracket
-            ')' -> CloseBracket
+            '(' -> OpenPar
+            ')' -> ClosePar
             '{' -> OpenBraces
             '}' -> CloseBraces
             ',' -> Comma
@@ -63,7 +63,7 @@ class Tokenizer : Stage<Token, Char>() {
         error("$raw cannot be converted to i32") // TODO
     }
 
-    override fun step(c: Char) {
+    override fun consume(c: Char): Token? {
         when {
             c.isWhitespace() -> {}
             c == '/' && r.peek() == '/' -> while (!r.isEof() && r.current() != '\n') r.step()
@@ -71,14 +71,13 @@ class Tokenizer : Stage<Token, Char>() {
             c.isSimple() -> {
                 var raw = "$c"
                 while (r.peek().isSimple()) raw += r.step()
-                yield(
-                    if (raw[0].isDigit()) tokenizeNumber(raw)
-                    else Token.IdentifierToken(raw)
-                )
+
+                return if (raw[0].isDigit()) tokenizeNumber(raw) else Token.IdentifierToken(raw)
             }
-            else -> {
-                yield(tokenizeSpecial(c, r))
-            }
+
+            else -> return tokenizeSpecial(c, r)
         }
+
+        return next()
     }
 }

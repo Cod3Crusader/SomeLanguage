@@ -1,7 +1,7 @@
 package com.archvin.reader
 
-class SimpleReader<out T>(private val content: List<T>, defaultValue: T) : Reader<T>(defaultValue) {
+class SimpleReader<out T>(private val content: List<T>) : Reader<T>() {
     override fun length(): Int = content.size
-    override fun get(i: Int): T = if (i in 0 until length()) content[i] else defaultValue
+    override fun get(i: Int): T = content[i]
     override fun getAll(): List<T> = content
 }

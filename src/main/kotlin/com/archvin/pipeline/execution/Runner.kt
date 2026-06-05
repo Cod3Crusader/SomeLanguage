@@ -11,7 +11,7 @@ import java.util.*
 class Runner : Stage<Unit, Instruction>() {
     val stack: Stack<Value> = Stack()
 
-    fun execute(instr: Instruction) {
+    override fun consume(instr: Instruction) {
         when (instr) {
             is Instruction.LitInstr -> {
                 stack.push(instr.value)
@@ -31,14 +31,10 @@ class Runner : Stage<Unit, Instruction>() {
                         func.getValue().body(params)
                             .takeIf { func.type.retType !is BuiltinType.VoidType }?.let { stack.push(it) }
                     }
-                    is Symbol.Function.CustomFunction -> func.getValue().instructions.forEach { execute(it) }
+                    is Symbol.Function.CustomFunction -> func.getValue().instructions.forEach { consume(it) }
                 }
             }
             is Instruction.PassInstr -> { /* Do nothing */ }
         }
-    }
-
-    override fun step(c: Instruction) {
-        execute(c)
     }
 }
