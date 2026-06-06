@@ -23,7 +23,7 @@ sealed class BuiltinFunction(
     object Println : BuiltinFunction(
         "println",
         VoidType,
-        listOf(DebugType),
+        listOf(AnyType),
         { args ->
             println(args[0].asString())
             Value.Uninitialized

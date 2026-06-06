@@ -6,7 +6,7 @@ import com.archvin.pipeline.Stage
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.reader.Reader
 
-class Tokenizer : Stage<Token, Char>() {
+class Tokenizer : Stage.ConsumerStage<Token, Char>() {
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'
 
     private fun parseEscape(c: Char): Char = when (c) {

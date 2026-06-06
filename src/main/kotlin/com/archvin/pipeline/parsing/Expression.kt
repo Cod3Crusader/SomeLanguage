@@ -8,7 +8,7 @@ import com.archvin.utils.funSignature
 sealed class Expression : Debug() {
     class ReadExpr(val id: String) : Expression()
     class LitExpr<out T>(val lit: Literal<T>) : Expression()
-    class AssignExpr(val variableId: String, val assigned: Expression) : Expression()
+    class AssignExpr(val id: String, val assigned: Expression) : Expression()
 
     class OpExpr(val operationFun: LambdaVal) : Expression()
 

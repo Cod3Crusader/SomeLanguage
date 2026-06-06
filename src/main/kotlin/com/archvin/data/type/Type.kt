@@ -1,7 +1,7 @@
 package com.archvin.data.type
 
 import com.archvin.data.HasId
-import com.archvin.data.type.BuiltinType.DebugType
+import com.archvin.data.type.BuiltinType.AnyType
 import com.archvin.utils.Debug
 import com.archvin.utils.funSignature
 
@@ -14,6 +14,6 @@ sealed class Type(val signature: String) : Debug() {
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is DebugType || this is DebugType) true else this.signature == (other as? Type)?.signature
+        return if (other is AnyType || this is AnyType) true else this.signature == (other as? Type)?.signature
     }
 }

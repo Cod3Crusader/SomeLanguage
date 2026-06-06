@@ -8,7 +8,7 @@ import com.archvin.pipeline.Stage
 import com.archvin.pipeline.finalizing.Instruction
 import java.util.*
 
-class Runner : Stage<Unit, Instruction>() {
+class Runner : Stage.ConsumerStage<Unit, Instruction>() {
     val stack: Stack<Value> = Stack()
 
     override fun consume(instr: Instruction) {

@@ -9,7 +9,7 @@ import com.archvin.pipeline.lexing.Token
 import com.archvin.pipeline.lexing.Token.IdentifierToken
 import com.archvin.pipeline.parsing.Expression.*
 
-class Parser : Stage<Expression, Token>() {
+class Parser : Stage.ConsumerStage<Expression, Token>() {
     private fun parseSpecial(t: SpecialToken): Expression {
         // TODO: consider removal
         return when (t) {
