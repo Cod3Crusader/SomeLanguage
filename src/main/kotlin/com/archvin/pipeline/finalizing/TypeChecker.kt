@@ -1,6 +1,7 @@
 package com.archvin.pipeline.finalizing
 
 import com.archvin.data.type.BuiltinType.AnyType
+import com.archvin.data.type.BuiltinType.VoidType
 import com.archvin.data.type.Type
 import com.archvin.data.variable.Symbol.Function.CustomFunction
 import com.archvin.data.variable.Symbol.Variable
@@ -12,13 +13,12 @@ import com.archvin.pipeline.parsing.Expression
 class TypeChecker : Stage.ConsumerStage<CheckedExpr, Expression>() {
     val resolver = NameResolver()
 
-    fun checkType(expr: Expression, expectType: Type): CheckedExpr? {
-        val expr: CheckedExpr? = when (expr) {
+    fun checkType(expr: Expression, expectType: Type): CheckedExpr {
+        val expr: CheckedExpr = when (expr) {
             is Expression.AssignExpr -> {
                 val variable = resolver.resolveVar(expr.id)
 
-
-                Assign(variable, checkType(expr.assigned, variable.type)!!)
+                Assign(variable, checkType(expr.assigned, variable.type))
             }
             is Expression.DeclareExpr -> {
                 val symbolType = resolver.resolveType(expr.typeId)
@@ -27,13 +27,15 @@ class TypeChecker : Stage.ConsumerStage<CheckedExpr, Expression>() {
                     else Variable(expr.id, symbolType)
                 )
 
-                null // TODO
+                if (expectType !is AnyType) throw CompileError.TypeMismatchError(expectType, VoidType)
+
+                next()!!
             }
             is Expression.CallExpr -> {
                 val func = resolver.resolveFunc(expr.functionId)
 
                 Call(func, expr.params
-                    .mapIndexed { i, it -> checkType(it, func.type.paramTypes[i])!! })
+                    .mapIndexed { i, it -> checkType(it, func.type.paramTypes[i]) })
             }
             is Expression.LambdaExpr -> {
                 TODO()
@@ -44,12 +46,10 @@ class TypeChecker : Stage.ConsumerStage<CheckedExpr, Expression>() {
             is Expression.ReadExpr -> Read(resolver.resolveVar(expr.id))
         }
 
-        if (expr?.type != expectType) throw CompileError.TypeMismatchError(expectType, expr!!.type)
+        if (expr.type != expectType) throw CompileError.TypeMismatchError(expectType, expr.type)
 
         return expr
     }
 
-    override fun consume(c: Expression): CheckedExpr? {
-        return checkType(c, AnyType)
-    }
+    override fun consume(c: Expression) = checkType(c, AnyType)
 }
