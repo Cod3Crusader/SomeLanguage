@@ -20,5 +20,4 @@ sealed class Expression : Debug() {
             : DeclareExpr(id, funSignature(retType, paramTypes), false)
     }
 
-    object PassExpr : Expression()
 }
