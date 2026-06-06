@@ -8,16 +8,19 @@ abstract class Stage<T, R> {
 
     protected abstract fun step(c: R)
 
-    protected open fun yield(add: T) = ret.add(add)
+    protected open fun yield(add: T) { ret.add(add) }
 
     open fun process(r: Reader<R>): List<T> {
         this.r = r
 
+        if (r.isEof()) return emptyList()
+
         ret.clear()
         r.reset()
-        while (!r.isEof()) {
+        while (true) {
             step(r.current())
-            if (!r.isEof()) r.step()
+            if (r.isEof()) break
+            r.step()
         }
 
         return ret.toList()
@@ -27,6 +30,6 @@ abstract class Stage<T, R> {
         override fun step(c: R) { consume(c)?.let { yield(it) } }
 
         protected abstract fun consume(c: R): T?
-        protected open fun next(): T? = if (r.isEof()) consume(r.step()) else null
+        protected open fun next(): T? = if (!r.isEof()) consume(r.step()) else null
     }
 }

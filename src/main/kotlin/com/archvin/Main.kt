@@ -1,8 +1,10 @@
 package com.archvin
 
 import com.archvin.pipeline.finalizing.NameResolver
+import com.archvin.pipeline.finalizing.TypeChecker
 //import com.archvin.pipeline.finalizing.TypeChecker
 import com.archvin.pipeline.lexing.Tokenizer
+import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Parser
 import com.archvin.reader.SimpleReader
 import java.io.File
@@ -26,9 +28,9 @@ fun main(args: Array<String>) {
     val tokens = Tokenizer().process(charReader)
     val expr = Parser().process(SimpleReader(tokens))
     expr.forEach { println(it) }
-    //val instr = TypeChecker().process(SimpleReader(expr, Expression.PassExpr))
+    val instr = TypeChecker().process(SimpleReader(expr))
     println()
-    //instr.forEach { println(it) }
+    instr.forEach { println(it) }
 
 
     println()

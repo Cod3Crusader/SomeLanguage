@@ -11,19 +11,19 @@ import java.util.*
 class Runner : Stage.ConsumerStage<Unit, Instruction>() {
     val stack: Stack<Value> = Stack()
 
-    override fun consume(instr: Instruction) {
-        when (instr) {
+    override fun consume(c: Instruction) {
+        when (c) {
             is Instruction.LitInstr -> {
-                stack.push(instr.value)
+                stack.push(c.value)
             }
             is Instruction.ReadInstr -> {
-                stack.push(instr.variable.getValue())
+                stack.push(c.variable.getValue())
             }
             is Instruction.AssignInstr -> {
-                instr.variable.setValue(stack.pop())
+                c.variable.setValue(stack.pop())
             }
             is Instruction.CallInstr -> {
-                when (val func = instr.function) {
+                when (val func = c.function) {
                     is BuiltinFunction -> {
                         val params = func.type.paramTypes.indices.map { stack.pop() }
                             .reversed() // TODO: reverse at compile time
