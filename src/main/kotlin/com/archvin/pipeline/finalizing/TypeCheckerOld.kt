@@ -9,8 +9,8 @@ class TypeChecker : ConsumerStage<Instruction, Expression>() {
 
     private fun manager() = scopeStack.lastOrNull()?.manager ?: topManager
 
-    fun declare(c: DeclareExpr) {
-        if (c !is DeclareExpr.FunDeclare) {
+    fun declare(c: Declaration) {
+        if (c !is Declaration.FunDeclare) {
 
             val type = resolver.resolveType(c.typeId)
             val variable = Variable(c.id, type, c.isMutable)
@@ -49,7 +49,7 @@ class TypeChecker : ConsumerStage<Instruction, Expression>() {
                 manager().addPending(AssignInstr(variable), listOf(variable.type))
                 if (!variable.isMutable) throw CompileError.CannotReassign(variable)
             }
-            is DeclareExpr -> declare(c)
+            is Declaration -> declare(c)
             is CallExpr -> {
                 val resolved = resolver.resolveFunc(c.functionId)
                 val paramNum = resolved.type.paramTypes.size

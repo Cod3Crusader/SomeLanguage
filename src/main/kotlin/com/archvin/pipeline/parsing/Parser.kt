@@ -2,66 +2,58 @@ package com.archvin.pipeline.parsing
 
 import com.archvin.exceptions.CompileError
 import com.archvin.exceptions.CompileError.UnfinishedError
-import com.archvin.pipeline.Stage
+import com.archvin.pipeline.IStage
 import com.archvin.pipeline.lexing.SpecialToken
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.pipeline.lexing.Token
 import com.archvin.pipeline.lexing.Token.IdentifierToken
+import com.archvin.pipeline.parsing.AstNode.Declaration
+import com.archvin.pipeline.parsing.AstNode.Declaration.FunDeclare
 import com.archvin.pipeline.parsing.Expression.*
+import com.archvin.reader.Reader
 
-class Parser : Stage.ConsumerStage<Expression, Token>() {
-    private fun parseSpecial(t: SpecialToken): Expression {
-        // TODO: consider removal
-        return when (t) {
-            OpenBraces -> {
-                val expressions = ArrayList<Expression>()
+object Parser : IStage.IConsumer<AstNode, Scope, Token> {
+    override lateinit var r: Reader<Token>
+    val topScope = Scope()
 
-                while (r.step() !is CloseBraces) {
-                    expressions.add(consume(r.current()) ?: throw UnfinishedError("lambda expression"))
-                }
+    private fun parseFunction(id: String, typeId: String): FunDeclare {
+        val paramTypes = arrayListOf<String>()
 
-                LambdaExpr(expressions)
+        until(ClosePar) {
+            val id = (r.current() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
+            paramTypes.add(id)
+
+            when (r.step()) {
+                is Comma -> {}
+                !is Comma -> throw CompileError.UnexpectedError(",", r.current().raw)
             }
-
-            else -> throw CompileError.UnexpectedError("expression", t.raw)
         }
+
+        val expressions = ArrayList<Expression>()
+        val scope = Scope()
+
+        until(CloseBraces) {
+            val node = consume(r.current()) ?: throw UnfinishedError("lambda expression")
+            when (node) {
+                is Declaration -> scope.add(node)
+                is Expression-> expressions.add(node)
+            }
+        }
+
+        return FunDeclare(id, typeId, paramTypes, scope, expressions)
     }
 
-    private fun parseDeclaration(id: String, typeId: String): DeclareExpr {
-        return if (r.step() is Assignment) DeclareExpr(id, typeId, true)
-        else if (r.current() is OpenPar) {
-            val paramTypes = arrayListOf<String>()
-
-
-            while (r.step() !is ClosePar) {
-                val id = (r.current() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
-                paramTypes.add(id)
-
-                when (r.step()) {
-                    is ClosePar -> break
-                    is Comma -> {}
-                    !is Comma -> throw CompileError.UnexpectedError(",", r.current().raw)
-                }
-            }
-
-            DeclareExpr.FunDeclare(id, typeId, paramTypes)
-        }
-        else throw CompileError.UninitializedError(id)
-    }
-
-    private fun parseIdentifier(id: String): Expression {
+    private fun parseIdentifier(id: String): AstNode {
         return when (val next = r.step()) {
-            Assignment -> AssignExpr(id, next() ?: throw UnfinishedError("assignment"))
+            Assignment -> AssignExpr(id, next() as? Expression ?: throw UnfinishedError("assignment"))
 
             OpenPar -> {
                 val params = ArrayList<Expression>()
 
-                while (r.step() != ClosePar) {
-                    params.add(consume(r.current()) ?: throw UnfinishedError("call"))
-
+                until(ClosePar) {
+                    params.add(consume(r.current()) as? Expression ?: throw UnfinishedError("call"))
 
                     when (r.step()) {
-                        is ClosePar -> break
                         is Comma -> {}
                         !is Comma -> throw CompileError.UnexpectedError("expression", ",")
                     }
@@ -70,7 +62,10 @@ class Parser : Stage.ConsumerStage<Expression, Token>() {
                 CallExpr(id, params)
             }
 
-            is IdentifierToken -> parseDeclaration(next.id, id)
+            is IdentifierToken ->
+                if (r.step() is Assignment) Declaration(next.id, id, true)
+                else if (r.current() is OpenPar) parseFunction(next.id, id)
+                else throw CompileError.UninitializedError(next.id)
 
 
             else -> {
@@ -79,15 +74,17 @@ class Parser : Stage.ConsumerStage<Expression, Token>() {
             }
         }
     }
-
-    override fun consume(c: Token): Expression? {
+    
+    override fun consume(c: Token): AstNode? {
         return when (c) {
             is IdentifierToken -> parseIdentifier(c.id)
             is Token.LiteralToken<*> -> LitExpr(c.lit)
 
-            is SpecialToken -> parseSpecial(c)
+            is SpecialToken -> throw CompileError.UnexpectedError("expression", c.raw)
 
             is Token.Test -> TODO("this shouldnt be here")
         }
     }
+
+    override fun ret() = topScope
 }

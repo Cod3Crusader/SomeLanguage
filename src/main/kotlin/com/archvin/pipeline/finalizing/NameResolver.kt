@@ -32,5 +32,4 @@ class NameResolver {
     fun resolveType(id: String) = map[id] as? Type ?: throw CompileError.UnresolvedIdentifier(id)
     fun resolveFunc(id: String) = map[id] as? Symbol.Function ?: throw CompileError.UnresolvedIdentifier(id)
     fun resolveVar(id: String) = map[id] as? Variable ?: throw CompileError.UnresolvedIdentifier(id)
-
 }

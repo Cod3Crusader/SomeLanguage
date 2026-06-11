@@ -4,12 +4,16 @@ import com.archvin.data.type.BuiltinType
 import com.archvin.data.value.Value
 import com.archvin.data.variable.BuiltinFunction
 import com.archvin.data.variable.Symbol
-import com.archvin.pipeline.Stage
+import com.archvin.pipeline.IStage
 import com.archvin.pipeline.finalizing.Instruction
+import com.archvin.reader.Reader
 import java.util.*
 
-class Runner : Stage.ConsumerStage<Unit, Instruction>() {
+object Runner : IStage.IConsumer<Unit, Unit, Instruction> {
     val stack: Stack<Value> = Stack()
+    override lateinit var r: Reader<Instruction>
+
+    override fun ret() {}
 
     override fun consume(c: Instruction) {
         when (c) {
