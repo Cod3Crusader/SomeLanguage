@@ -29,18 +29,15 @@ object Parser : IStage.IConsumer<AstNode, Scope, Token> {
             }
         }
 
-        val expressions = ArrayList<Expression>()
         val scope = Scope()
 
+        if (read() !is OpenBraces) throw CompileError.UninitializedError(id)
         until(CloseBraces) {
-            val node = consume(r.current()) ?: throw UnfinishedError("lambda expression")
-            when (node) {
-                is Declaration -> scope.add(node)
-                is Expression-> expressions.add(node)
-            }
+            val node = consume(it) ?: throw UnfinishedError("lambda expression")
+            scope.add(node)
         }
 
-        return FunDeclare(id, typeId, paramTypes, scope, expressions)
+        return FunDeclare(id, typeId, paramTypes, scope)
     }
 
     private fun parseIdentifier(id: String): AstNode {
@@ -50,13 +47,13 @@ object Parser : IStage.IConsumer<AstNode, Scope, Token> {
             OpenPar -> {
                 val params = ArrayList<Expression>()
 
-                until(ClosePar) {
-                    params.add(consume(r.current()) as? Expression ?: throw UnfinishedError("call"))
+                var expectComma = false
 
-                    when (r.step()) {
-                        is Comma -> {}
-                        !is Comma -> throw CompileError.UnexpectedError("expression", ",")
-                    }
+                until (ClosePar) {
+                    if (expectComma && it !is Comma) throw CompileError.UnexpectedError(",", r.peek().raw)
+                    if (!expectComma) (consume(it) as? Expression) ?.let { add -> params.add(add) } ?: throw UnfinishedError("call")
+
+                    expectComma = !expectComma
                 }
 
                 CallExpr(id, params)
@@ -86,5 +83,6 @@ object Parser : IStage.IConsumer<AstNode, Scope, Token> {
         }
     }
 
+    override fun step(c: Token) { consume(c)?.let { topScope.add(it) } }
     override fun ret() = topScope
 }

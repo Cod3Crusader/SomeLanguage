@@ -7,6 +7,7 @@ import com.archvin.data.type.BuiltinType.VoidType
 import com.archvin.data.type.Type
 import com.archvin.data.value.LambdaVal
 import com.archvin.data.value.Value
+import com.archvin.data.variable.Symbol
 import com.archvin.data.variable.Symbol.Function.CustomFunction
 import com.archvin.data.variable.Symbol.Variable
 import com.archvin.exceptions.CompileError
@@ -21,47 +22,42 @@ import com.archvin.pipeline.parsing.Scope
 
 object TypeChecker : IStage.IProvider<Instruction, Scope> {
     override val ret = mutableListOf<Instruction>()
-    val resolver = NameResolver()
 
     private val scopeStack = ArrayDeque<ArrayList<Instruction>>()
+    private val resolverStack = ArrayDeque<NameResolver>(listOf(NameResolver.TopResolver()))
+
+    private fun resolver() = resolverStack.last()
 
     override fun yield(add: Instruction) {
         if (scopeStack.isNotEmpty()) scopeStack.last().add(add)
         else super.yield(add)
     }
 
-    fun checkDeclaration(dec: Declaration) {
-        val symbol = if (dec is FunDeclare) {
-            val retType = resolver.resolveType(dec.retType)
-            val paramTypes = dec.paramTypes.map { resolver.resolveType(it) }
+    fun checkDeclaration(dec: Declaration): Symbol {
+        return if (dec is FunDeclare) {
+            val retType = resolver().resolveType(dec.retType)
+            val paramTypes = dec.paramTypes.map { resolver().resolveType(it) }
             val func = CustomFunction(dec.id, Type.FunctionType(retType, paramTypes))
-            resolver.add(func)
             func
         }
         else {
-            val type = resolver.resolveType(dec.typeId)
+            val type = resolver().resolveType(dec.typeId)
             val variable = Variable(dec.id, type)
-            resolver.add(variable)
             variable
         }
-
-        //checkType(r.step(), symbol.type)
-        yield(AssignInstr(symbol))
-
-        TypedInstruction(null, VoidType)
     }
 
     fun checkType(expr: Expression, expectType: Type) {
         val instr: TypedInstruction = when (expr) {
             is AssignExpr -> {
-                val variable = resolver.resolveVar(expr.id)
+                val variable = resolver().resolveVar(expr.id)
 
                 checkType(expr.assigned, variable.type)
 
                 AssignInstr(variable) + VoidType
             }
             is CallExpr -> {
-                val func = resolver.resolveFunc(expr.functionId)
+                val func = resolver().resolveFunc(expr.functionId)
 
                 expr.params.mapIndexed { i, it -> checkType(it, func.type.paramTypes[i]) }
 
@@ -81,7 +77,7 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
             is LitExpr<*> -> LitInstr(Value.Primitive(expr.lit.value)) + expr.lit.type
             is OpExpr -> TODO()
             is ReadExpr -> {
-                val symbol = resolver.resolveVar(expr.id)
+                val symbol = resolver().resolveVar(expr.id)
                 ReadInstr(symbol) + symbol.type
             }
         }
@@ -92,9 +88,24 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
         instr.instr?.let { yield(it) }
     }
 
-    override fun process(r: Scope): List<Instruction> {
-        TODO("Not yet implemented")
+    private fun checkScope(s: Scope) {
+        resolverStack.add(NameResolver(resolver()))
+        val scopes = mutableListOf<Scope>()
+        s.declarations.forEach {
+            val symbol = checkDeclaration(it)
+            resolver().add(symbol)
+            if (it is FunDeclare) scopes.add(it.scope)
+        }
+        s.expressions.forEach { checkType(it, AnyType) }
+        resolverStack.removeLast()
     }
+
+    override fun process(r: Scope): List<Instruction> {
+        checkScope(r)
+
+        return ret
+    }
+
     private class TypedInstruction(val instr: Instruction?, override val type: Type) : HasType
     private operator fun Instruction.plus(type: Type) = TypedInstruction(this, type)
 }

@@ -23,9 +23,10 @@ sealed interface IStage<E, R> {
         override fun process(r: Reader<R>): E {
             this.r = r
 
-            if (r.isEof()) return ret()
+            if (r.isEmpty()) return ret()
 
             r.reset()
+            step(r.current())
             while (true) step(read() ?: break)
             return ret()
         }
