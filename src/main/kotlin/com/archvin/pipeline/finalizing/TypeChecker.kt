@@ -7,8 +7,6 @@ import com.archvin.data.type.Type
 import com.archvin.data.value.LambdaVal
 import com.archvin.data.value.Value
 import com.archvin.data.variable.Symbol
-import com.archvin.data.variable.Symbol.Function.CustomFunction
-import com.archvin.data.variable.Symbol.Variable
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.IStage
 import com.archvin.pipeline.finalizing.Instruction.*
@@ -39,12 +37,12 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
             is FunDeclare -> {
                 val retType = resolver().resolveType(dec.retType)
                 val paramTypes = dec.paramTypes.map { resolver().resolveType(it) }
-                CustomFunction(dec.id, Type.FunctionType(retType, paramTypes))
+                Symbol.createFun(dec.id, retType, paramTypes)
             }
 
             is VarDeclare -> {
                 val type = resolver().resolveType(dec.typeId)
-                Variable(dec.id, type)
+                Symbol.createVar(dec.id, type)
             }
         }
     }
@@ -86,9 +84,9 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
         return instr
     }
 
-    private data class PendingFunction(val decl: FunDeclare, val symbol: CustomFunction)
+    private data class PendingFunction(val decl: FunDeclare, val symbol: Symbol)
 
-    private fun processScope(scope: Scope, ownerFunction: CustomFunction? = null) {
+    private fun processScope(scope: Scope, ownerFunction: Symbol? = null) {
         resolverStack.add(NameResolver(resolver()))
 
         if (ownerFunction != null) {
@@ -101,7 +99,7 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
             val symbol = declareDeclaration(decl)
             resolver().add(symbol)
             if (decl is FunDeclare) {
-                pendingFunctions.add(PendingFunction(decl, symbol as CustomFunction))
+                pendingFunctions.add(PendingFunction(decl, symbol))
             }
         }
 
@@ -115,7 +113,7 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
 
         if (ownerFunction != null) {
             val bodyInstructions = instructionStack.removeLast()
-            ownerFunction.setValue(LambdaVal.Composite(bodyInstructions))
+            ownerFunction.value = LambdaVal.Composite(bodyInstructions)
         }
 
         resolverStack.removeLast()

@@ -1,9 +1,8 @@
 package com.archvin.pipeline.execution
 
 import com.archvin.data.type.BuiltinType
+import com.archvin.data.value.LambdaVal
 import com.archvin.data.value.Value
-import com.archvin.data.variable.BuiltinFunction
-import com.archvin.data.variable.Symbol
 import com.archvin.pipeline.IStage
 import com.archvin.pipeline.finalizing.Instruction
 import com.archvin.reader.Reader
@@ -21,21 +20,22 @@ object Runner : IStage.IConsumer<Unit, Unit, Instruction> {
                 stack.push(c.value)
             }
             is Instruction.ReadInstr -> {
-                stack.push(c.variable.getValue())
+                stack.push(c.variable.value)
             }
             is Instruction.AssignInstr -> {
-                c.variable.setValue(stack.pop())
+                c.variable.value = stack.pop()
             }
             is Instruction.CallInstr -> {
-                when (val func = c.function) {
-                    is BuiltinFunction -> {
+                val func = c.function
+                when (func.value) {
+                    is LambdaVal.Builtin -> {
                         val params = func.type.paramTypes.indices.map { stack.pop() }
                             .reversed() // TODO: reverse at compile time
 
-                        func.getValue().body(params)
+                        func.value.body(params)
                             .takeIf { func.type.retType !is BuiltinType.VoidType }?.let { stack.push(it) }
                     }
-                    is Symbol.Function.CustomFunction -> func.getValue().instructions.forEach { consume(it) }
+                    is LambdaVal.Composite -> func.value.instructions.forEach { consume(it) }
                 }
             }
             is Instruction.PassInstr -> { /* Do nothing */ }

@@ -11,14 +11,7 @@ sealed class BuiltinFunction(
     retType: BuiltinType<*>,
     paramTypes: List<BuiltinType<*>>,
     body: (List<Value>) -> Value
-) : Symbol.Function(id, Type.FunctionType(retType, paramTypes)) {
-
-    init {
-        setValue(LambdaVal.Builtin(body))
-    }
-
-    override fun getValue() = super.getValue() as LambdaVal.Builtin
-
+) : Symbol(id, Type.FunctionType(retType, paramTypes), false, LambdaVal.Builtin(body)) {
 
     object Println : BuiltinFunction(
         "println",
