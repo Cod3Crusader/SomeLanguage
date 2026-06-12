@@ -7,8 +7,8 @@ import com.archvin.pipeline.lexing.SpecialToken
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.pipeline.lexing.Token
 import com.archvin.pipeline.lexing.Token.IdentifierToken
-import com.archvin.pipeline.parsing.AstNode.Declaration
 import com.archvin.pipeline.parsing.AstNode.Declaration.FunDeclare
+import com.archvin.pipeline.parsing.AstNode.Declaration.VarDeclare
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
 
@@ -59,10 +59,16 @@ object Parser : IStage.IConsumer<AstNode, Scope, Token> {
                 CallExpr(id, params)
             }
 
-            is IdentifierToken ->
-                if (r.step() is Assignment) Declaration(next.id, id, true)
-                else if (r.current() is OpenPar) parseFunction(next.id, id)
-                else throw CompileError.UninitializedError(next.id)
+            is IdentifierToken -> {
+                val typeId = id
+                val id = next.id
+
+                if (r.step() is Assignment) {
+                    val init = AssignExpr(id, next() as? Expression ?: error("Expected initialization"))
+                    VarDeclare(id, typeId, init)
+                } else if (r.current() is OpenPar) parseFunction(id, typeId)
+                else throw CompileError.UninitializedError(id)
+            }
 
 
             else -> {

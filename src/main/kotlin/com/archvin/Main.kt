@@ -1,6 +1,7 @@
 package com.archvin
 
 //import com.archvin.pipeline.finalizing.TypeChecker
+import com.archvin.pipeline.execution.Runner
 import com.archvin.pipeline.finalizing.NameResolver
 import com.archvin.pipeline.finalizing.TypeChecker
 import com.archvin.pipeline.lexing.Tokenizer
@@ -33,5 +34,5 @@ fun main(args: Array<String>) {
 
 
     println()
-    //Runner.process(SimpleReader(instr))
+    Runner.process(SimpleReader(instr))
 }
