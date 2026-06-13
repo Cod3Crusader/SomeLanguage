@@ -1,4 +1,4 @@
-package com.archvin.data.variable
+package com.archvin.data.symbol
 
 import com.archvin.data.type.BuiltinType
 import com.archvin.data.type.BuiltinType.*

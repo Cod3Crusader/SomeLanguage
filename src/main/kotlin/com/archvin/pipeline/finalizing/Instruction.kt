@@ -1,7 +1,7 @@
 package com.archvin.pipeline.finalizing
 
 import com.archvin.data.value.Value
-import com.archvin.data.variable.Symbol
+import com.archvin.data.symbol.Symbol
 import com.archvin.utils.Debug
 
 sealed class Instruction(val paramNum: Int) : Debug() {

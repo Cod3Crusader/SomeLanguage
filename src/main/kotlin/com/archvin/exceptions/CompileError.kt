@@ -1,7 +1,7 @@
 package com.archvin.exceptions
 
 import com.archvin.data.type.Type
-import com.archvin.data.variable.Symbol
+import com.archvin.data.symbol.Symbol
 import com.archvin.pipeline.finalizing.Instruction
 
 sealed class CompileError(errorMessage: String) : Exception(errorMessage) {

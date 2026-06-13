@@ -6,5 +6,5 @@ sealed class LambdaVal : Value() {
     override fun asString() = "function" //TODO
 
     class Builtin(val body: (List<Value>) -> Value) : LambdaVal()
-    class Composite(val instructions: List<Instruction>) : LambdaVal()
+    class Composite(val instructions: MutableList<Instruction>) : LambdaVal()
 }

@@ -6,7 +6,7 @@ import com.archvin.data.type.BuiltinType.VoidType
 import com.archvin.data.type.Type
 import com.archvin.data.value.LambdaVal
 import com.archvin.data.value.Value
-import com.archvin.data.variable.Symbol
+import com.archvin.data.symbol.Symbol
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.IStage
 import com.archvin.pipeline.finalizing.Instruction.*
@@ -21,9 +21,8 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
     override val ret = mutableListOf<Instruction>()
 
     private val instructionStack = ArrayDeque<MutableList<Instruction>>()
-    private val resolverStack = ArrayDeque<NameResolver>(listOf(NameResolver.TopResolver()))
 
-    private fun resolver() = resolverStack.last()
+    private var resolver: NameResolver = NameResolver.TopResolver()
 
     override fun yield(add: Instruction) {
         if (instructionStack.isNotEmpty())
@@ -35,13 +34,13 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
     private fun declareDeclaration(dec: Declaration): Symbol {
         return when (dec) {
             is FunDeclare -> {
-                val retType = resolver().resolveType(dec.retType)
-                val paramTypes = dec.paramTypes.map { resolver().resolveType(it) }
+                val retType = resolver.resolveType(dec.retType).res
+                val paramTypes = dec.paramTypes.map { resolver.resolveType(it).res }
                 Symbol.createFun(dec.id, retType, paramTypes)
             }
 
             is VarDeclare -> {
-                val type = resolver().resolveType(dec.typeId)
+                val type = resolver.resolveType(dec.typeId).res
                 Symbol.createVar(dec.id, type)
             }
         }
@@ -50,12 +49,12 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
     private fun checkType(expr: Expression, expectType: Type): TypedInstruction {
         val instr: TypedInstruction = when (expr) {
             is AssignExpr -> {
-                val variable = resolver().resolveVar(expr.id)
+                val variable = resolver.resolveVar(expr.id).res
                 checkType(expr.assigned, variable.type)
                 AssignInstr(variable) + VoidType
             }
             is CallExpr -> {
-                val func = resolver().resolveFunc(expr.functionId)
+                val func = resolver.resolveFunc(expr.functionId).res
                 expr.params.forEachIndexed { i, arg ->
                     checkType(arg, func.type.paramTypes[i])
                 }
@@ -72,7 +71,7 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
             is LitExpr<*> -> LitInstr(Value.Primitive(expr.lit.value)) + expr.lit.type
             is OpExpr -> TODO()
             is ReadExpr -> {
-                val symbol = resolver().resolveVar(expr.id)
+                val symbol = resolver.resolveVar(expr.id).res
                 ReadInstr(symbol) + symbol.type
             }
         }
@@ -84,20 +83,16 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
         return instr
     }
 
-    private data class PendingFunction(val decl: FunDeclare, val symbol: Symbol)
+    private fun processScope(scope: Scope, ownerLambda: LambdaVal.Composite? = null) {
+        resolver = (NameResolver(resolver))
 
-    private fun processScope(scope: Scope, ownerFunction: Symbol? = null) {
-        resolverStack.add(NameResolver(resolver()))
-
-        if (ownerFunction != null) {
-            instructionStack.add(mutableListOf())
-        }
+        if (ownerLambda != null) instructionStack.add(ownerLambda.instructions)
 
         val pendingFunctions = mutableListOf<PendingFunction>()
 
         for (decl in scope.varDeclares) {
             val symbol = declareDeclaration(decl)
-            resolver().add(symbol)
+            val index = resolver.add(symbol).index
             if (decl is FunDeclare) {
                 pendingFunctions.add(PendingFunction(decl, symbol))
             }
@@ -107,23 +102,21 @@ object TypeChecker : IStage.IProvider<Instruction, Scope> {
             checkType(expr, AnyType)
         }
 
-        for ((funcDecl, funcSym) in pendingFunctions) {
-            processScope(funcDecl.scope, funcSym)
+        for ((funcDecl, lambda) in pendingFunctions) {
+            processScope(funcDecl.scope, lambda)
         }
 
-        if (ownerFunction != null) {
-            val bodyInstructions = instructionStack.removeLast()
-            ownerFunction.value = LambdaVal.Composite(bodyInstructions)
-        }
+        if (ownerLambda != null) instructionStack.removeLast()
 
-        resolverStack.removeLast()
+        resolver = resolver.parent!!
     }
 
     override fun process(r: Scope): List<Instruction> {
-        processScope(r, ownerFunction = null)
+        processScope(r, ownerLambda = null)
         return ret
     }
 
+    private data class PendingFunction(val decl: FunDeclare, val lambda: LambdaVal.Composite)
     private class TypedInstruction(val instr: Instruction?, override val type: Type) : HasType
     private operator fun Instruction.plus(type: Type) = TypedInstruction(this, type)
 }
