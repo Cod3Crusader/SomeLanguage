@@ -9,10 +9,8 @@ sealed class Instruction(val paramNum: Int) : Debug() {
         override val className: String = "Lit"
     }
 
-    class ReadInstr(val variable: Symbol) : Instruction(0)
-    class AssignInstr(val variable: Symbol) : Instruction(1)
+    class ReadInstr(val level: Int, val index: Int) : Instruction(0)
+    class AssignInstr(val level: Int, val index: Int) : Instruction(1)
 
-    class CallInstr(val function: Symbol.Function) : Instruction(function.type.paramTypes.size)
-
-    object PassInstr : Instruction(0)
+    class CallInstr(paramNum: Int) : Instruction(paramNum)
 }
