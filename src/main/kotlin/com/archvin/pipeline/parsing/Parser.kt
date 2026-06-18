@@ -12,9 +12,9 @@ import com.archvin.pipeline.parsing.AstNode.Declaration.VarDeclare
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
 
-object Parser : IStage.IConsumer<AstNode, Scope, Token> {
+object Parser : IStage.IConsumer<AstNode, LambdaExpr, Token> {
     override lateinit var r: Reader<Token>
-    val topScope = Scope()
+    val topLambda = LambdaExpr()
 
     private fun parseFunction(id: String, typeId: String): FunDeclare {
         val paramTypes = arrayListOf<String>()
@@ -29,15 +29,15 @@ object Parser : IStage.IConsumer<AstNode, Scope, Token> {
             }
         }
 
-        val scope = Scope()
+        val lambda = LambdaExpr()
 
         if (read() !is OpenBraces) throw CompileError.UninitializedError(id)
         until(CloseBraces) {
             val node = consume(it) ?: throw UnfinishedError("lambda expression")
-            scope.add(node)
+            lambda.add(node)
         }
 
-        return FunDeclare(id, typeId, paramTypes, scope)
+        return FunDeclare(id, typeId, paramTypes, lambda)
     }
 
     private fun parseIdentifier(id: String): AstNode {
@@ -89,6 +89,6 @@ object Parser : IStage.IConsumer<AstNode, Scope, Token> {
         }
     }
 
-    override fun step(c: Token) { consume(c)?.let { topScope.add(it) } }
-    override fun ret() = topScope
+    override fun step(c: Token) { consume(c)?.let { topLambda.add(it) } }
+    override fun ret() = topLambda
 }

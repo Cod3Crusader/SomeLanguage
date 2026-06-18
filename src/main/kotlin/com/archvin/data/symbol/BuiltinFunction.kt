@@ -11,7 +11,11 @@ sealed class BuiltinFunction(
     retType: BuiltinType<*>,
     paramTypes: List<BuiltinType<*>>,
     body: (List<Value>) -> Value
-) : Symbol(id, Type.FunctionType(retType, paramTypes), false, LambdaVal.Builtin(body)) {
+) : Symbol(id, Type.FunctionType(retType, paramTypes), false) {
+
+    val lambda = LambdaVal.Builtin(body)
+
+    init { builtins.add(this) }
 
     object Println : BuiltinFunction(
         "println",
@@ -32,4 +36,10 @@ sealed class BuiltinFunction(
             Value.Primitive(args[0].value + args[1].value)
         }
     )
+
+
+    companion object {
+        val builtins = ArrayList<BuiltinFunction>()
+    }
+
 }

@@ -11,5 +11,4 @@ sealed class Expression : AstNode() {
     class OpExpr(val operationFun: LambdaVal) : Expression()
 
     class CallExpr(val functionId: String, val params: List<Expression>) : Expression()
-    class LambdaExpr(val expressions: List<Expression>) : Expression()
 }

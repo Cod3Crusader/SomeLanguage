@@ -1,10 +1,10 @@
 package com.archvin.pipeline.finalizing
 
 import com.archvin.data.HasId
-import com.archvin.data.type.BuiltinType
-import com.archvin.data.type.Type
 import com.archvin.data.symbol.BuiltinFunction
 import com.archvin.data.symbol.Symbol
+import com.archvin.data.type.BuiltinType
+import com.archvin.data.type.Type
 import com.archvin.exceptions.CompileError
 
 open class NameResolver(val parent: NameResolver? = null) {
@@ -25,7 +25,7 @@ open class NameResolver(val parent: NameResolver? = null) {
         val res = resolve(id).asT<Symbol>() ?: throw CompileError.UnresolvedIdentifier(id)
         if (!res.res.isFunction()) throw CompileError.UnresolvedIdentifier(id)
 
-        return Resolved(res.res.asFunction()!!, res.index, res.level)
+        return Resolved(res.res.asFunction()!!, res.level, res.index)
     }
     fun resolveVar(id: String) = resolve(id).asT<Symbol>() ?: throw CompileError.UnresolvedIdentifier(id)
     
@@ -41,10 +41,14 @@ open class NameResolver(val parent: NameResolver? = null) {
         }
     }
 
-    class Resolved<out T : HasId>(val res: T, val index: Int, val level: Int) {
-        inline fun <reified T : HasId> asT() = (res as? T)?.let { Resolved(it, index, level) }
-        constructor(stored: Stored<T>) : this(stored.obj, stored.index, 0)
+    data class Stored<T : HasId>(val obj: T, val index: Int)
+    data class Resolved<out T : HasId>(val res: T, val level: Int, val index: Int) {
+        inline fun <reified T : HasId> asT() = (res as? T)?.let { Resolved(it, level, index) }
+        constructor(stored: Stored<T>) : this(stored.obj, 0, stored.index)
     }
-    operator fun <T : HasId> Resolved<T>?.unaryPlus() = if (this != null) Resolved<T>(this.res, this.index, this.level+1) else null
-    class Stored<T : HasId>(val obj: T, val index: Int)
+    operator fun <T : HasId> Resolved<T>?.unaryPlus() = if (this != null) Resolved<T>(
+        this.res,
+        this.level +1,
+        this.index
+    ) else null
 }
