@@ -22,12 +22,12 @@ class BuiltinFunction private constructor(
     companion object {
         val builtins = ArrayList<BuiltinFunction>()
 
-        val println = BuiltinFunction(
-            "println",
+        val print = BuiltinFunction(
+            "print",
             VoidType,
             listOf(AnyType)
         ) { args ->
-            println(args[0].asString())
+            print(args[0].asString())
             Value.Uninitialized
         }
 
