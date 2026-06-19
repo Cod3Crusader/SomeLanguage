@@ -31,7 +31,7 @@ object TypeChecker : IStage<Composite, List<Expression>> {
         val symbol = when (dec) {
             is FunDeclare -> {
                 val retType = resolver.resolveType(dec.retType).res
-                val paramTypes = dec.paramTypes.map { resolver.resolveType(it).res }
+                val paramTypes = dec.params.map { resolver.resolveType(it.typeId).res }
                 Symbol.createFun(dec.id, retType, paramTypes)
             }
 
@@ -66,7 +66,7 @@ object TypeChecker : IStage<Composite, List<Expression>> {
                 val (symbol, level, index) = resolver.resolveVar(expr.id)
                 ReadInstr(level, index) + symbol.type
             }
-            is LambdaExpr -> LitInstr(processScope(expr)) + VoidType
+            is LambdaExpr -> LitInstr(processScope(expr, emptyList())) + VoidType
             is VarDeclare -> {
                 val (decl, level, index) = resolver.resolveVar(expr.id)
                 checkType(expr.init, decl.type)
@@ -82,14 +82,16 @@ object TypeChecker : IStage<Composite, List<Expression>> {
         return instr
     }
 
-    private fun processScope(lambdaExpr: LambdaExpr): Composite {
+    private fun processScope(lambdaExpr: LambdaExpr, params: List<FunDeclare.Param>): Composite {
         resolver = NameResolver(resolver)
         instructionStack.add(ArrayList())
+
+        params.forEach { resolver.add(Symbol.createVar(it.id, resolver.resolveType(it.typeId).res)) }
 
         val varNum = processLambda(lambdaExpr)
 
         resolver = resolver.parent!!
-        return Composite(varNum, instructionStack.removeLast(), instructionStack.size)
+        return Composite(params.size + varNum, instructionStack.removeLast(), instructionStack.size)
     }
 
     private fun processLambda(lambdaExpr: LambdaExpr): Int {
@@ -108,7 +110,7 @@ object TypeChecker : IStage<Composite, List<Expression>> {
         }
 
         for (funcDecl in pendingFunctions) {
-            yield(LitInstr(processScope(funcDecl.init)))
+            yield(LitInstr(processScope(funcDecl.init, funcDecl.params)))
             val (_, level, index) = resolver.resolveFunc(funcDecl.id)
             yield(AssignInstr(level, index))
         }

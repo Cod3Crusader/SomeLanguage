@@ -10,9 +10,9 @@ object Runner : IStage<Unit, LambdaVal> {
     private val tempStack = ArrayDeque<Value>()
     private val valueStack = ArrayList<ArrayDeque<MutableList<Value>>>()
     
-    private fun get(level: Int, index: Int) = valueStack[valueStack.size - 1 - level].last()[index]
-    private fun set(level: Int, index: Int, newValue: Value) {
-       valueStack[level].last()[index] = newValue
+    private fun get(relativeLevel: Int, index: Int) = valueStack[valueStack.size - 1 - relativeLevel].last()[index]
+    private fun set(relativeLevel: Int, index: Int, newValue: Value) {
+       valueStack[valueStack.size - 1 - relativeLevel].last()[index] = newValue
     }
 
     private fun call(instr: Instruction.CallInstr) {

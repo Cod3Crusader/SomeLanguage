@@ -9,19 +9,23 @@ import com.archvin.pipeline.lexing.Token
 import com.archvin.pipeline.lexing.Token.IdentifierToken
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare
+import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare.Param
 import com.archvin.pipeline.parsing.Expression.Declaration.VarDeclare
 
 object Parser : IStage.ProvideConsume<Expression, Token>() {
-    private fun parseFunction(id: String, typeId: String): FunDeclare {
-        val paramTypes = arrayListOf<String>()
+    private fun parseFunctionDecl(id: String, typeId: String): FunDeclare {
+        val params = ArrayList<Param>()
 
-        until(ClosePar) {
-            val id = (r.current() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
-            paramTypes.add(id)
+        while(r.step() != ClosePar) {
+            val typeId = (r.current() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
+            val paramId = (read() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
 
-            when (r.step()) {
+            params.add(Param(paramId, typeId))
+
+            when (val got = read()) {
                 is Comma -> {}
-                !is Comma -> throw CompileError.UnexpectedError(",", r.current().raw)
+                is ClosePar -> break
+                else -> throw CompileError.UnexpectedError(",", got.toString())
             }
         }
 
@@ -33,7 +37,7 @@ object Parser : IStage.ProvideConsume<Expression, Token>() {
             lambda.expressions.add(node)
         }
 
-        return FunDeclare(id, typeId, paramTypes, lambda)
+        return FunDeclare(id, typeId, params, lambda)
     }
 
     private fun parseIdentifier(id: String): Expression {
@@ -61,7 +65,7 @@ object Parser : IStage.ProvideConsume<Expression, Token>() {
 
                 if (r.step() is Assignment) {
                     VarDeclare(id, typeId, next() ?: error("Expected initialization"))
-                } else if (r.current() is OpenPar) parseFunction(id, typeId)
+                } else if (r.current() is OpenPar) parseFunctionDecl(id, typeId)
                 else throw CompileError.UninitializedError(id)
             }
 
