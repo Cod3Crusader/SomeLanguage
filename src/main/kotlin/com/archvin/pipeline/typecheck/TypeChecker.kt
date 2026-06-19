@@ -1,7 +1,7 @@
-package com.archvin.pipeline.finalizing
+package com.archvin.pipeline.typecheck
 
 import com.archvin.data.HasType
-import com.archvin.data.symbol.BuiltinFunction
+import com.archvin.data.symbol.BuiltinFunction.Companion.builtins
 import com.archvin.data.symbol.Symbol
 import com.archvin.data.type.BuiltinType
 import com.archvin.data.type.BuiltinType.AnyType
@@ -11,15 +11,13 @@ import com.archvin.data.value.LambdaVal.Composite
 import com.archvin.data.value.Value
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.IStage
-import com.archvin.pipeline.finalizing.Instruction.*
-import com.archvin.pipeline.parsing.AstNode.Declaration
-import com.archvin.pipeline.parsing.AstNode.Declaration.FunDeclare
-import com.archvin.pipeline.parsing.AstNode.Declaration.VarDeclare
 import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
-import com.archvin.pipeline.parsing.LambdaExpr
+import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare
+import com.archvin.pipeline.parsing.Expression.Declaration.VarDeclare
+import com.archvin.pipeline.typecheck.Instruction.*
 
-object TypeChecker : IStage<Composite, LambdaExpr> {
+object TypeChecker : IStage<Composite, List<Expression>> {
 
     private val instructionStack = ArrayDeque<ArrayList<Instruction>>()
 
@@ -68,7 +66,13 @@ object TypeChecker : IStage<Composite, LambdaExpr> {
                 val (symbol, level, index) = resolver.resolveVar(expr.id)
                 ReadInstr(level, index) + symbol.type
             }
-            is LambdaExpr -> LitInstr(processLambda(expr)) + VoidType
+            is LambdaExpr -> LitInstr(processScope(expr)) + VoidType
+            is VarDeclare -> {
+                val (decl, level, index) = resolver.resolveVar(expr.id)
+                checkType(expr.init, decl.type)
+                AssignInstr(level, index) + VoidType
+            }
+            is FunDeclare -> TypedInstruction(null, VoidType)
         }
 
         if (instr.type != expectType && expectType != AnyType)
@@ -78,43 +82,49 @@ object TypeChecker : IStage<Composite, LambdaExpr> {
         return instr
     }
 
-    private fun processLambda(lambdaExpr: LambdaExpr): Composite {
+    private fun processScope(lambdaExpr: LambdaExpr): Composite {
         resolver = NameResolver(resolver)
-
         instructionStack.add(ArrayList())
 
-        processScope(lambdaExpr)
+        val varNum = processLambda(lambdaExpr)
 
         resolver = resolver.parent!!
-
-        return Composite(lambdaExpr.declares.size, instructionStack.removeLast(), instructionStack.size)
+        return Composite(varNum, instructionStack.removeLast(), instructionStack.size)
     }
 
-    private fun processScope(lambdaExpr: LambdaExpr) {
+    private fun processLambda(lambdaExpr: LambdaExpr): Int {
+        var varNum = 0
         val pendingFunctions = mutableListOf<FunDeclare>()
 
-        for (decl in lambdaExpr.declares) {
-            declare(decl)
-            if (decl is FunDeclare) {
-                pendingFunctions.add(decl)
+        // parse declarations
+        for (expr in lambdaExpr.expressions) {
+            if (expr !is Declaration) continue
+            declare(expr)
+            varNum++
+            if (expr is FunDeclare) {
+                pendingFunctions.add(expr)
             }
+
         }
 
         for (funcDecl in pendingFunctions) {
-            yield(LitInstr(processLambda(funcDecl.init)))
+            yield(LitInstr(processScope(funcDecl.init)))
             val (_, level, index) = resolver.resolveFunc(funcDecl.id)
             yield(AssignInstr(level, index))
         }
 
+        // parse instructions
         for (expr in lambdaExpr.expressions) {
             checkType(expr, AnyType)
         }
+
+        return varNum
     }
 
-    override fun process(r: LambdaExpr): Composite {
+    override fun process(r: List<Expression>): Composite {
         instructionStack.add(ArrayList())
 
-        BuiltinFunction.builtins.forEachIndexed { i, it ->
+        builtins.forEachIndexed { i, it ->
             resolver.add(it)
             instructionStack.last().add(LitInstr(it.lambda))
             instructionStack.last().add(AssignInstr(0, i))
@@ -125,10 +135,10 @@ object TypeChecker : IStage<Composite, LambdaExpr> {
         resolver.add(BuiltinType.StrType)
         resolver.add(BuiltinType.VoidType)
 
-        processScope(r)
+        val varNum = processLambda(LambdaExpr(r.toMutableList()))
 
         val main = instructionStack.removeLast()
-        return Composite(BuiltinFunction.builtins.size + r.declares.size, main, 0)
+        return Composite(varNum + builtins.size, main, 0)
     }
 
     private class TypedInstruction(val instr: Instruction?, override val type: Type) : HasType

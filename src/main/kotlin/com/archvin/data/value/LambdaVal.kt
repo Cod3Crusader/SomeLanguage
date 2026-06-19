@@ -1,6 +1,6 @@
 package com.archvin.data.value
 
-import com.archvin.pipeline.finalizing.Instruction
+import com.archvin.pipeline.typecheck.Instruction
 
 sealed class LambdaVal : Value() {
     override fun asString() = "function" //TODO

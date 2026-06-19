@@ -1,11 +1,11 @@
 package com.archvin
 
-//import com.archvin.pipeline.finalizing.TypeChecker
+//import com.archvin.pipeline.typecheck.TypeChecker
 import com.archvin.pipeline.execution.Runner
-import com.archvin.pipeline.finalizing.NameResolver
-import com.archvin.pipeline.finalizing.TypeChecker
 import com.archvin.pipeline.lexing.Tokenizer
 import com.archvin.pipeline.parsing.Parser
+import com.archvin.pipeline.typecheck.NameResolver
+import com.archvin.pipeline.typecheck.TypeChecker
 import com.archvin.reader.SimpleReader
 import java.io.File
 

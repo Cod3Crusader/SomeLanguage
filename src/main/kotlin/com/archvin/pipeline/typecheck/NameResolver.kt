@@ -1,4 +1,4 @@
-package com.archvin.pipeline.finalizing
+package com.archvin.pipeline.typecheck
 
 import com.archvin.data.HasId
 import com.archvin.data.symbol.Symbol

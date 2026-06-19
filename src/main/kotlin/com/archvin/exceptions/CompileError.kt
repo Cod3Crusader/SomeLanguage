@@ -1,8 +1,8 @@
 package com.archvin.exceptions
 
-import com.archvin.data.type.Type
 import com.archvin.data.symbol.Symbol
-import com.archvin.pipeline.finalizing.Instruction
+import com.archvin.data.type.Type
+import com.archvin.pipeline.typecheck.Instruction
 
 sealed class CompileError(errorMessage: String) : Exception(errorMessage) {
     class TypeMismatchError(expected: Type, got: Type)

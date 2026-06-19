@@ -3,7 +3,7 @@ package com.archvin.pipeline.execution
 import com.archvin.data.value.LambdaVal
 import com.archvin.data.value.Value
 import com.archvin.pipeline.IStage
-import com.archvin.pipeline.finalizing.Instruction
+import com.archvin.pipeline.typecheck.Instruction
 
 object Runner : IStage<Unit, LambdaVal> {
 
