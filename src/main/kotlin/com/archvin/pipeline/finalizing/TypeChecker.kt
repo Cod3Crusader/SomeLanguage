@@ -5,7 +5,7 @@ import com.archvin.data.symbol.Symbol
 import com.archvin.data.type.BuiltinType.AnyType
 import com.archvin.data.type.BuiltinType.VoidType
 import com.archvin.data.type.Type
-import com.archvin.data.value.LambdaVal
+import com.archvin.data.value.LambdaVal.Composite
 import com.archvin.data.value.Value
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.IStage
@@ -18,18 +18,14 @@ import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.pipeline.parsing.LambdaExpr
 import com.archvin.utils.pop
 
-object TypeChecker : IStage.IProvider<Instruction, LambdaExpr> {
-    override val ret = mutableListOf<Instruction>()
+object TypeChecker : IStage<Composite, LambdaExpr> {
 
     private val instructionStack = ArrayDeque<ArrayList<Instruction>>()
 
     private var resolver: NameResolver = NameResolver.TopResolver()
 
-    override fun yield(add: Instruction) {
-        if (instructionStack.isNotEmpty())
-            instructionStack.last().add(add)
-        else
-            ret.add(add)
+    fun yield(add: Instruction) {
+        instructionStack.last().add(add)
     }
 
     private fun declare(dec: Declaration): Symbol {
@@ -81,7 +77,7 @@ object TypeChecker : IStage.IProvider<Instruction, LambdaExpr> {
         return instr
     }
 
-    private fun processLambda(lambdaExpr: LambdaExpr): LambdaVal {
+    private fun processLambda(lambdaExpr: LambdaExpr): Composite {
         resolver = NameResolver(resolver)
 
         instructionStack.add(ArrayList())
@@ -105,13 +101,10 @@ object TypeChecker : IStage.IProvider<Instruction, LambdaExpr> {
 
         resolver = resolver.parent!!
 
-        return LambdaVal.Composite(lambdaExpr.declares.size, instructionStack.pop(), instructionStack.size)
+        return Composite(lambdaExpr.declares.size, instructionStack.pop(), instructionStack.size)
     }
 
-    override fun process(r: LambdaExpr): List<Instruction> {
-        processLambda(r)
-        return ret
-    }
+    override fun process(r: LambdaExpr) = processLambda(r)
 
     private class TypedInstruction(val instr: Instruction?, override val type: Type) : HasType
     private operator fun Instruction.plus(type: Type) = TypedInstruction(this, type)

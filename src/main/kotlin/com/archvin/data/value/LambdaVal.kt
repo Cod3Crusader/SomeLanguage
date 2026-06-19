@@ -2,7 +2,7 @@ package com.archvin.data.value
 
 import com.archvin.pipeline.finalizing.Instruction
 
-sealed class LambdaVal() : Value() {
+sealed class LambdaVal : Value() {
     override fun asString() = "function" //TODO
 
     class Builtin(val body: (List<Value>) -> Value) : LambdaVal()

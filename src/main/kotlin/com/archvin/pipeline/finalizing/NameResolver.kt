@@ -5,15 +5,20 @@ import com.archvin.data.symbol.BuiltinFunction
 import com.archvin.data.symbol.Symbol
 import com.archvin.data.type.BuiltinType
 import com.archvin.data.type.Type
+import com.archvin.data.value.Value
 import com.archvin.exceptions.CompileError
 
 open class NameResolver(val parent: NameResolver? = null) {
     private val map = mutableMapOf<String, Stored<*>>()
+    private var index = 0
     
-    fun <T : HasId> add(value: T): Stored<T> {
-        val id = value.id
+    fun <T : HasId> add(add: T): Stored<T> {
+        val id = add.id
         if (map.containsKey(id)) throw CompileError.Redeclaration(id)
-        val stored =Stored(value, map.size)
+        val stored: Stored<T> = if (add is Value) {
+            index++
+            Stored(add, index)
+        } else Stored(add, -1)
         map[id] = stored
         return stored
     }
@@ -31,13 +36,12 @@ open class NameResolver(val parent: NameResolver? = null) {
     
     class TopResolver : NameResolver(null) {
         init {
+            BuiltinFunction.builtins.forEach { add(it) }
+
             add(BuiltinType.I32Type)
             add(BuiltinType.CharType)
             add(BuiltinType.StrType)
             add(BuiltinType.VoidType)
-
-            add(BuiltinFunction.Println)
-            add(BuiltinFunction.Add)
         }
     }
 

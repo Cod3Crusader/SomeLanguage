@@ -2,7 +2,7 @@ package com.archvin.pipeline
 
 import com.archvin.reader.Reader
 
-sealed interface IStage<E, R> {
+interface IStage<E, R> {
     fun process(r: R): E
 
     interface IConsumer<T, E, R> : IStage<E, Reader<R>> {

@@ -28,11 +28,11 @@ fun main(args: Array<String>) {
     val tokens = Tokenizer.process(charReader)
     val parsed = Parser.process(SimpleReader(tokens))
     //expr.forEach { println(it) }
-    val instr = TypeChecker.process(parsed)
+    val main = TypeChecker.process(parsed)
     println()
-    instr.forEach { println(it) }
+    main.instructions.forEach { println(it) }
 
 
     println()
-    Runner.process(SimpleReader(instr))
+    Runner.process(main)
 }
