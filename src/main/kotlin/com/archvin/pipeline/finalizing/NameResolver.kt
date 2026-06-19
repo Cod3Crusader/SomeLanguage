@@ -1,11 +1,8 @@
 package com.archvin.pipeline.finalizing
 
 import com.archvin.data.HasId
-import com.archvin.data.symbol.BuiltinFunction
 import com.archvin.data.symbol.Symbol
-import com.archvin.data.type.BuiltinType
 import com.archvin.data.type.Type
-import com.archvin.data.value.Value
 import com.archvin.exceptions.CompileError
 
 open class NameResolver(val parent: NameResolver? = null) {
@@ -15,9 +12,8 @@ open class NameResolver(val parent: NameResolver? = null) {
     fun <T : HasId> add(add: T): Stored<T> {
         val id = add.id
         if (map.containsKey(id)) throw CompileError.Redeclaration(id)
-        val stored: Stored<T> = if (add is Value) {
-            index++
-            Stored(add, index)
+        val stored: Stored<T> = if (add !is Type) {
+            Stored(add, index++)
         } else Stored(add, -1)
         map[id] = stored
         return stored
@@ -33,17 +29,6 @@ open class NameResolver(val parent: NameResolver? = null) {
         return Resolved(res.res.asFunction()!!, res.level, res.index)
     }
     fun resolveVar(id: String) = resolve(id).asT<Symbol>() ?: throw CompileError.UnresolvedIdentifier(id)
-    
-    class TopResolver : NameResolver(null) {
-        init {
-            BuiltinFunction.builtins.forEach { add(it) }
-
-            add(BuiltinType.I32Type)
-            add(BuiltinType.CharType)
-            add(BuiltinType.StrType)
-            add(BuiltinType.VoidType)
-        }
-    }
 
     data class Stored<T : HasId>(val obj: T, val index: Int)
     data class Resolved<out T : HasId>(val res: T, val level: Int, val index: Int) {

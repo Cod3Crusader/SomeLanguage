@@ -11,7 +11,7 @@ class LambdaExpr : Expression() {
         when (add) {
             is Declaration -> {
                 addDec(add)
-                addExpr(add.init)
+                if (add is Declaration.VarDeclare) addExpr(add.init)
             }
             is Expression -> addExpr(add)
         }
