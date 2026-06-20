@@ -49,7 +49,8 @@ object TypeChecker : IStage<Composite, List<Expression>> {
             is AssignExpr -> {
                 val (variable, level, index) = resolver.resolveVar(expr.id)
                 checkType(expr.assigned, variable.type)
-                AssignInstr(level, index) + VoidType
+                if (variable is Symbol.StaticSymbol) AssignStatic(variable.value) + VoidType
+                else AssignInstr(level, index) + VoidType
             }
             is CallExpr -> {
                 val resolved = resolver.resolveFunc(expr.functionId)
@@ -57,22 +58,23 @@ object TypeChecker : IStage<Composite, List<Expression>> {
                 expr.params.forEachIndexed { i, arg ->
                     checkType(arg, func.type.paramTypes[i])
                 }
-                yield(ReadInstr(resolved.level, resolved.index))
+                yield(ReadStatic((func.symbol as Symbol.StaticSymbol).value))
                 CallInstr(expr.params.size) + func.type.retType
             }
             is LitExpr<*> -> LitInstr(Value.Primitive(expr.lit.value)) + expr.lit.type
             is OpExpr -> TODO()
             is ReadExpr -> {
                 val (symbol, level, index) = resolver.resolveVar(expr.id)
-                ReadInstr(level, index) + symbol.type
+                if (symbol is Symbol.StaticSymbol) ReadStatic(symbol.value) + symbol.type
+                else ReadInstr(level, index) + symbol.type
             }
             is LambdaExpr -> LitInstr(processScope(expr, emptyList())) + VoidType
             is VarDeclare -> {
-                val (decl, level, index) = resolver.resolveVar(expr.id)
-                checkType(expr.init, decl.type)
+                val (variable, level, index) = resolver.resolveVar(expr.id)
+                checkType(expr.init, variable.type)
                 AssignInstr(level, index) + VoidType
             }
-            is FunDeclare -> TypedInstruction(null, VoidType)
+            is FunDeclare -> TypedInstruction(null, VoidType) // Already handled
         }
 
         if (instr.type != expectType && expectType != AnyType)
@@ -110,9 +112,9 @@ object TypeChecker : IStage<Composite, List<Expression>> {
         }
 
         for (funcDecl in pendingFunctions) {
-            yield(LitInstr(processScope(funcDecl.init, funcDecl.params)))
-            val (_, level, index) = resolver.resolveFunc(funcDecl.id)
-            yield(AssignInstr(level, index))
+            val func = resolver.resolveFunc(funcDecl.id).res.symbol as Symbol.StaticSymbol
+            func.load(processScope(funcDecl.init, funcDecl.params))
+            println()
         }
 
         // parse instructions
@@ -126,11 +128,7 @@ object TypeChecker : IStage<Composite, List<Expression>> {
     override fun process(r: List<Expression>): Composite {
         instructionStack.add(ArrayList())
 
-        builtins.forEachIndexed { i, it ->
-            resolver.add(it)
-            instructionStack.last().add(LitInstr(it.lambda))
-            instructionStack.last().add(AssignInstr(0, i))
-        }
+        builtins.forEach { resolver.add(it) }
 
         resolver.add(BuiltinType.I32Type)
         resolver.add(BuiltinType.CharType)
@@ -143,6 +141,7 @@ object TypeChecker : IStage<Composite, List<Expression>> {
         return Composite(varNum + builtins.size, main, 0)
     }
 
+    private data class PendingFunc(val symbol: Symbol.StaticSymbol, val decl: FunDeclare)
     private class TypedInstruction(val instr: Instruction?, override val type: Type) : HasType
     private operator fun Instruction.plus(type: Type) = TypedInstruction(this, type)
 }

@@ -9,7 +9,8 @@ object Runner : IStage<Unit, LambdaVal> {
 
     private val tempStack = ArrayDeque<Value>()
     private val valueStack = ArrayList<ArrayDeque<MutableList<Value>>>()
-    
+    private val statics = ArrayList<Value>()
+
     private fun get(relativeLevel: Int, index: Int) = valueStack[valueStack.size - 1 - relativeLevel].last()[index]
     private fun set(relativeLevel: Int, index: Int, newValue: Value) {
        valueStack[valueStack.size - 1 - relativeLevel].last()[index] = newValue
@@ -27,10 +28,10 @@ object Runner : IStage<Unit, LambdaVal> {
                 if (valueStack.size == func.level) valueStack.add(ArrayDeque())
                 else if (valueStack.size < func.level) error("this should be impossible")
                 valueStack[func.level].add(MutableList(func.varNum) { Value.Uninitialized } )
-                
+
                 (0 until instr.paramNum).forEach { set(0, it, tempStack.removeLast()) }
                 func.instructions.forEach { consume(it) }
-                
+
                 valueStack[func.level].removeLast()
                 if (valueStack[func.level].isEmpty()) valueStack.removeLast()
             }
@@ -39,9 +40,12 @@ object Runner : IStage<Unit, LambdaVal> {
 
     fun consume(c: Instruction) {
         when (c) {
-            is Instruction.LitInstr -> tempStack.add(c.value)
             is Instruction.ReadInstr -> tempStack.add(get(c.level, c.index))
             is Instruction.AssignInstr -> set(c.level, c.index, tempStack.removeLast())
+            is Instruction.ReadStatic -> tempStack.add(c.static.value)
+            is Instruction.AssignStatic -> c.static.value = tempStack.removeLast()
+
+            is Instruction.LitInstr -> tempStack.add(c.value)
             is Instruction.CallInstr -> call(c)
         }
     }

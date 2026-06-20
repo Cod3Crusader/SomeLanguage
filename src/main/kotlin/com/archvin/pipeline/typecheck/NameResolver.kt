@@ -12,9 +12,13 @@ open class NameResolver(val parent: NameResolver? = null) {
     fun <T : HasId> add(add: T): Stored<T> {
         val id = add.id
         if (map.containsKey(id)) throw CompileError.Redeclaration(id)
-        val stored: Stored<T> = if (add !is Type) {
-            Stored(add, index++)
-        } else Stored(add, -1)
+
+        val index = when {
+            add !is Type && add !is Symbol.StaticSymbol -> index++
+            else -> -1
+        }
+        val stored = Stored(add, index)
+
         map[id] = stored
         return stored
     }
