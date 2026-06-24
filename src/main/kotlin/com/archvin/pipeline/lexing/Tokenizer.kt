@@ -4,7 +4,7 @@ import com.archvin.data.Literal
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.reader.Reader
-import com.archvin.reader.readAll
+import com.archvin.utils.readAll
 
 object Tokenizer {
     private lateinit var r: Reader<Char>

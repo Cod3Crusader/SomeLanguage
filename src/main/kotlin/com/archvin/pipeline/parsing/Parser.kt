@@ -11,8 +11,8 @@ import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare
 import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare.Param
 import com.archvin.pipeline.parsing.Expression.Declaration.VarDeclare
 import com.archvin.reader.Reader
-import com.archvin.reader.readAll
-import com.archvin.reader.until
+import com.archvin.utils.readAll
+import com.archvin.utils.until
 
 object Parser {
     private lateinit var r: Reader<Token>
