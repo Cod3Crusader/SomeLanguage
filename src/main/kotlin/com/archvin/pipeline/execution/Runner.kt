@@ -2,10 +2,9 @@ package com.archvin.pipeline.execution
 
 import com.archvin.data.value.LambdaVal
 import com.archvin.data.value.Value
-import com.archvin.pipeline.IStage
 import com.archvin.pipeline.typecheck.Instruction
 
-object Runner : IStage<Unit, LambdaVal> {
+object Runner {
 
     private val tempStack = ArrayDeque<Value>()
     private val valueStack = ArrayList<ArrayDeque<MutableList<Value>>>()
@@ -50,7 +49,7 @@ object Runner : IStage<Unit, LambdaVal> {
         }
     }
 
-    override fun process(r: LambdaVal) {
+    fun process(r: LambdaVal) {
         tempStack.add(r)
         call(Instruction.CallInstr(0))
     }

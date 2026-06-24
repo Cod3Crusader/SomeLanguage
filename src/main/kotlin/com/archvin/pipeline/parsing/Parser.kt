@@ -2,7 +2,6 @@ package com.archvin.pipeline.parsing
 
 import com.archvin.exceptions.CompileError
 import com.archvin.exceptions.CompileError.UnfinishedError
-import com.archvin.pipeline.IStage
 import com.archvin.pipeline.lexing.SpecialToken
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.pipeline.lexing.Token
@@ -11,18 +10,23 @@ import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare
 import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare.Param
 import com.archvin.pipeline.parsing.Expression.Declaration.VarDeclare
+import com.archvin.reader.Reader
+import com.archvin.reader.readAll
+import com.archvin.reader.until
 
-object Parser : IStage.ProvideConsume<Expression, Token>() {
+object Parser {
+    private lateinit var r: Reader<Token>
+    
     private fun parseFunctionDecl(id: String, typeId: String): FunDeclare {
         val params = ArrayList<Param>()
 
         while(r.step() != ClosePar) {
             val typeId = (r.current() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
-            val paramId = (read() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
+            val paramId = (r.step() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
 
             params.add(Param(paramId, typeId))
 
-            when (val got = read()) {
+            when (val got = r.step()) {
                 is Comma -> {}
                 is ClosePar -> break
                 else -> throw CompileError.UnexpectedError(",", got.toString())
@@ -31,8 +35,8 @@ object Parser : IStage.ProvideConsume<Expression, Token>() {
 
         val lambda = LambdaExpr()
 
-        if (read() !is OpenBraces) throw CompileError.UninitializedError(id)
-        until(CloseBraces) {
+        if (r.step() !is OpenBraces) throw CompileError.UninitializedError(id)
+        r.until(CloseBraces) {
             val node = consume(it) ?: throw UnfinishedError("lambda expression")
             lambda.expressions.add(node)
         }
@@ -49,7 +53,7 @@ object Parser : IStage.ProvideConsume<Expression, Token>() {
 
                 var expectComma = false
 
-                until (ClosePar) {
+                r.until (ClosePar) {
                     if (expectComma && it !is Comma) throw CompileError.UnexpectedError(",", r.current().raw)
                     if (!expectComma) consume(it)?.let { add -> params.add(add) } ?: throw UnfinishedError("call")
 
@@ -77,7 +81,7 @@ object Parser : IStage.ProvideConsume<Expression, Token>() {
         }
     }
     
-    override fun consume(c: Token): Expression? {
+    fun consume(c: Token): Expression? {
         return when (c) {
             is IdentifierToken -> parseIdentifier(c.id)
             is Token.LiteralToken<*> -> LitExpr(c.lit)
@@ -86,5 +90,15 @@ object Parser : IStage.ProvideConsume<Expression, Token>() {
 
             is Token.Test -> TODO("this shouldnt be here")
         }
+    }
+    
+    fun next() = r.step()?.let { consume(it) }
+    
+    fun process(r: Reader<Token>): List<Expression> {
+        this.r = r
+
+        val ret = ArrayList<Expression>()
+        r.readAll { consume(it)?.let { ret.add(it) } }
+        return ret
     }
 }

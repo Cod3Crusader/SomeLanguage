@@ -4,6 +4,8 @@ sealed class Reader<out T> {
     var index : Int = 0
         protected set(value) { field = value.coerceIn(0, length()) }
 
+    init { if (length() == 0) error("Reader is empty") }
+
     fun get(i: Int) = if (index < length()) forceGet(i) else null
 
     abstract fun length(): Int
@@ -18,7 +20,5 @@ sealed class Reader<out T> {
     fun back() { index-- }
 
     fun peek(i: Int = 1): T? = get(index + i)
-    fun isEof(): Boolean = index >= length() - 1
-
-    fun isEmpty(): Boolean = length() == 0
+    fun isEof(): Boolean = index >= length()
 }

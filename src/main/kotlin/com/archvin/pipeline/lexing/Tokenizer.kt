@@ -2,11 +2,13 @@ package com.archvin.pipeline.lexing
 
 import com.archvin.data.Literal
 import com.archvin.exceptions.CompileError
-import com.archvin.pipeline.IStage
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.reader.Reader
+import com.archvin.reader.readAll
 
-object Tokenizer : IStage.ProvideConsume<Token, Char>() {
+object Tokenizer {
+    private lateinit var r: Reader<Char>
+
     private fun Char.isSimple(): Boolean = isLetterOrDigit() || this == '_'
 
     private fun parseEscape(c: Char): Char = when (c) {
@@ -63,7 +65,7 @@ object Tokenizer : IStage.ProvideConsume<Token, Char>() {
         error("$raw cannot be converted to i32") // TODO
     }
 
-    override fun consume(c: Char): Token? {
+    fun consume(c: Char): Token? {
         when {
             c.isWhitespace() -> {}
             c == '/' && r.peek() == '/' -> while (!r.isEof() && r.current() != '\n') r.step()
@@ -79,5 +81,15 @@ object Tokenizer : IStage.ProvideConsume<Token, Char>() {
         }
 
         return next()
+    }
+
+    fun next() = r.step()?.let { consume(it) }
+
+    fun process(r: Reader<Char>): List<Token> {
+        this.r = r
+
+        val ret = ArrayList<Token>()
+        r.readAll { consume(it)?.let { ret.add(it) } }
+        return ret
     }
 }

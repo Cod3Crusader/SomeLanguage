@@ -10,14 +10,13 @@ import com.archvin.data.type.Type
 import com.archvin.data.value.LambdaVal.Composite
 import com.archvin.data.value.Value
 import com.archvin.exceptions.CompileError
-import com.archvin.pipeline.IStage
 import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare
 import com.archvin.pipeline.parsing.Expression.Declaration.VarDeclare
 import com.archvin.pipeline.typecheck.Instruction.*
 
-object TypeChecker : IStage<Composite, List<Expression>> {
+object TypeChecker {
 
     private val instructionStack = ArrayDeque<ArrayList<Instruction>>()
 
@@ -125,7 +124,7 @@ object TypeChecker : IStage<Composite, List<Expression>> {
         return varNum
     }
 
-    override fun process(r: List<Expression>): Composite {
+    fun process(r: List<Expression>): Composite {
         instructionStack.add(ArrayList())
 
         builtins.forEach { resolver.add(it) }
