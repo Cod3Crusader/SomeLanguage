@@ -25,7 +25,7 @@ object Tokenizer : IStage.ProvideConsume<Token, Char>() {
                 var raw = ""
                 while (r.step() != '"') {
                     raw +=
-                        if (r.current() == '\\') parseEscape(r.step())
+                        if (r.current() == '\\') parseEscape(r.step()!!)
                         else r.current()
                     if (r.index == r.getAll().size - 1) throw CompileError.UnfinishedError("string literal")
                 }
@@ -35,7 +35,7 @@ object Tokenizer : IStage.ProvideConsume<Token, Char>() {
 
             '\'' -> {
                 val char =
-                    if (r.step() == '\\') parseEscape(r.step())
+                    if (r.step() == '\\') parseEscape(r.step()!!)
                     else r.current()
                 if (r.step() != '\'') throw CompileError.UnfinishedError("character literal")
 
@@ -70,7 +70,7 @@ object Tokenizer : IStage.ProvideConsume<Token, Char>() {
             c == '/' && r.peek() == '*' -> while(!r.isEof() && !(r.current() == '/' && r.peek(-1) == '*')) r.step()
             c.isSimple() -> {
                 var raw = "$c"
-                while (r.peek().isSimple()) raw += r.step()
+                while (r.peek()!!.isSimple()) raw += r.step()
 
                 return if (raw[0].isDigit()) tokenizeNumber(raw) else Token.IdentifierToken(raw)
             }

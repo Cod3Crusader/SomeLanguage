@@ -50,7 +50,7 @@ object Parser : IStage.ProvideConsume<Expression, Token>() {
                 var expectComma = false
 
                 until (ClosePar) {
-                    if (expectComma && it !is Comma) throw CompileError.UnexpectedError(",", r.peek().raw)
+                    if (expectComma && it !is Comma) throw CompileError.UnexpectedError(",", r.current().raw)
                     if (!expectComma) consume(it)?.let { add -> params.add(add) } ?: throw UnfinishedError("call")
 
                     expectComma = !expectComma
