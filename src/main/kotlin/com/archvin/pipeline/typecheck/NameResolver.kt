@@ -1,9 +1,7 @@
 package com.archvin.pipeline.typecheck
 
-import com.archvin.data.HasId
-import com.archvin.data.symbol.Symbol
-import com.archvin.data.type.Type
-import com.archvin.exceptions.CompileError
+/*
+// obsolete after scope resolver
 
 open class NameResolver(val parent: NameResolver? = null) {
     private val map = mutableMapOf<String, Stored<*>>()
@@ -45,3 +43,4 @@ open class NameResolver(val parent: NameResolver? = null) {
         this.index
     ) else null
 }
+ */

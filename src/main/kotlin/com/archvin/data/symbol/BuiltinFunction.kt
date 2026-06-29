@@ -11,13 +11,12 @@ class BuiltinFunction private constructor(
     retType: BuiltinType<*>,
     paramTypes: List<BuiltinType<*>>,
     body: (List<Value>) -> Value
-) : Symbol.StaticSymbol(id, Type.FunctionType(retType, paramTypes), false) {
+) : Symbol.Function(id, Type.FunctionType(retType, paramTypes)) {
 
     val lambda: LambdaVal.Builtin = LambdaVal.Builtin(body)
 
     init {
         builtins.add(this)
-        value.value = lambda
     }
 
     companion object {

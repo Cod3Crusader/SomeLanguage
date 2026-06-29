@@ -1,14 +1,13 @@
 package com.archvin.reader
 
-sealed class Reader<out T> {
+sealed class Reader<out T>(val length: Int) {
     var index : Int = 0
-        protected set(value) { field = value.coerceIn(0, length()) }
+        protected set(value) { field = value.coerceIn(0, length) }
 
-    init { if (length() == 0) error("Reader is empty") }
+    init { if (length == 0) error("Reader is empty") }
 
-    fun get(i: Int) = if (index < length()) forceGet(i) else null
+    fun get(i: Int) = if (index < length) forceGet(i) else null
 
-    abstract fun length(): Int
     abstract fun forceGet(i: Int): T
     abstract fun getAll(): List<T>
 
@@ -20,5 +19,5 @@ sealed class Reader<out T> {
     fun back() { index-- }
 
     fun peek(i: Int = 1): T? = get(index + i)
-    fun isEof(): Boolean = index >= length()
+    fun isEof(): Boolean = index >= length
 }

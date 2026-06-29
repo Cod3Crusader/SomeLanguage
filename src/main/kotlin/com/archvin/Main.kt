@@ -4,7 +4,6 @@ package com.archvin
 import com.archvin.pipeline.execution.Runner
 import com.archvin.pipeline.lexing.Tokenizer
 import com.archvin.pipeline.parsing.Parser
-import com.archvin.pipeline.typecheck.NameResolver
 import com.archvin.pipeline.typecheck.TypeChecker
 import com.archvin.reader.SimpleReader
 import java.io.File
@@ -22,8 +21,6 @@ fun main(args: Array<String>) {
     val code = file.readText()
 
     val charReader = SimpleReader(code.toCharArray().toList())
-
-    val resolver = NameResolver()
 
     val tokens = Tokenizer.process(charReader)
     val parsed = Parser.process(SimpleReader(tokens))
