@@ -21,13 +21,11 @@ object TypeChecker {
 
     private val instructionStack = ArrayDeque<ArrayList<Instruction>>()
 
-    private var scopeBuilder: ScopeBuilder = ScopeBuilder()
-
     fun yield(add: Instruction) {
         instructionStack.last().add(add)
     }
 
-    private fun declare(dec: Declaration) {
+    private fun declare(dec: Declaration): Symbol {
         val symbol = when (dec) {
             is FunDeclare -> {
                 val retType = BuiltinType.resolveType(dec.retType)
@@ -41,22 +39,22 @@ object TypeChecker {
             }
         }
 
-        scopeBuilder.addSymbol(symbol)
+        return symbol
     }
 
-    private fun checkType(expr: Expression, expectType: Type): TypedInstruction {
+    private fun checkType(expr: Expression, expectType: Type, resolver: ScopeBuilder): TypedInstruction {
         val instr: TypedInstruction = when (expr) {
             is AssignExpr -> {
-                val (variable, scope, index) = scopeBuilder.resolveVar(expr.id)
-                checkType(expr.assigned, variable.type)
+                val (variable, scope, index) = resolver.resolveVar(expr.id)
+                checkType(expr.assigned, variable.type, resolver)
 
                 AssignInstr(scope, index) + VoidType
             }
 
             is CallExpr -> {
-                val (func, scope, index) = scopeBuilder.resolveFunc(expr.functionId)
+                val (func, scope, index) = resolver.resolveFunc(expr.functionId)
                 expr.params.forEachIndexed { i, arg ->
-                    checkType(arg, func.type.paramTypes[i])
+                    checkType(arg, func.type.paramTypes[i], resolver)
                 }
                 yield(ReadInstr(scope, index))
 
@@ -67,15 +65,15 @@ object TypeChecker {
             is OpExpr -> TODO()
 
             is ReadExpr -> {
-                val (symbol, scope, index) = scopeBuilder.resolveVar(expr.id)
+                val (symbol, scope, index) = resolver.resolveVar(expr.id)
                 ReadInstr(scope, index) + symbol.type
             }
 
-            is LambdaExpr -> LoadValue(processScope(expr, emptyList())) + VoidType
+            is LambdaExpr -> LoadValue(processScope(expr, emptyList(), resolver)) + VoidType
 
             is VarDeclare -> {
-                val (variable, scope, index) = scopeBuilder.resolveVar(expr.id)
-                checkType(expr.init, variable.type)
+                val (variable, scope, index) = resolver.resolveVar(expr.id)
+                checkType(expr.init, variable.type, resolver)
                 AssignInstr(scope, index) + VoidType
             }
 
@@ -89,19 +87,20 @@ object TypeChecker {
         return instr
     }
 
-    private fun processScope(lambdaExpr: LambdaExpr, params: List<FunDeclare.Param>): Composite {
-        scopeBuilder = ScopeBuilder(scopeBuilder)
+    private fun processScope(lambdaExpr: LambdaExpr, params: List<FunDeclare.Param>, parent: ScopeBuilder): Composite {
+        val scopeBuilder = ScopeBuilder(parent)
         instructionStack.add(ArrayList())
 
         params.forEach { scopeBuilder.addSymbol(Symbol(it.id, BuiltinType.resolveType(it.typeId))) }
 
-        val scope = processLambda(lambdaExpr)
+        val scope = processLambda(lambdaExpr, scopeBuilder)
 
-        scopeBuilder = scopeBuilder.parent!!
         return Composite(scope, instructionStack.removeLast())
     }
 
-    private fun processLambda(lambdaExpr: LambdaExpr): RuntimeScope {
+    private fun processLambda(lambdaExpr: LambdaExpr, parent: ScopeBuilder): RuntimeScope {
+        val scopeBuilder = ScopeBuilder(parent)
+
         var varNum = 0
         val pendingFunctions = mutableListOf<FunDeclare>()
 
@@ -121,31 +120,33 @@ object TypeChecker {
         for (funcDecl in pendingFunctions) {
             // TODO: make it constant immediately
             val (_, rtScope, index) = scopeBuilder.resolveFunc(funcDecl.id)
-            yield(LoadValue(processScope(funcDecl.init, funcDecl.params)))
+            yield(LoadValue(processScope(funcDecl.init, funcDecl.params, scopeBuilder)))
             yield(AssignInstr(rtScope, index))
         }
 
         // parse instructions
         for (expr in lambdaExpr.expressions) {
-            checkType(expr, AnyType)
+            checkType(expr, AnyType, scopeBuilder)
         }
 
         return scopeBuilder.scope
     }
 
     fun process(r: List<Expression>): Composite {
+        val topBuilder = ScopeBuilder()
+
         instructionStack.add(ArrayList())
 
-        builtins.forEach { scopeBuilder.addSymbol(it) }
+        builtins.forEach { topBuilder.addSymbol(it) }
 
-        val scope = processLambda(LambdaExpr(r.toMutableList()))
+        val scope = processLambda(LambdaExpr(r.toMutableList()), topBuilder)
 
 
         // TODO
         val setBase = ArrayList<Instruction>()
         builtins.forEach {
             setBase.add(LoadValue(it.lambda))
-            val (_, scope, index) = scopeBuilder.resolveFunc(it.id)
+            val (_, scope, index) = topBuilder.resolveFunc(it.id)
             setBase.add(AssignInstr(scope, index))
         }
 
@@ -154,7 +155,6 @@ object TypeChecker {
         return Composite(scope, main)
     }
 
-    private data class PendingFunc(val symbol: Symbol, val decl: FunDeclare)
     private class TypedInstruction(val instr: Instruction?, override val type: Type) : HasType
     private operator fun Instruction.plus(type: Type) = TypedInstruction(this, type)
 }
