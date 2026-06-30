@@ -5,22 +5,16 @@ import com.archvin.data.HasType
 import com.archvin.data.type.Type
 import com.archvin.utils.Debug
 
-open class Symbol protected constructor(
-        override val id: String,
-        override val type: Type,
-        val isMutable: Boolean) : Debug(), HasId, HasType  {
+open class Symbol(
+    override val id: String,
+    override val type: Type,
+    val isMutable: Boolean = true) : Debug(), HasId, HasType  {
 
-    companion object {
-        fun create(id: String, type: Type, isMutable: Boolean = true): Symbol {
-            // TODO: reconsider function mutability
-            return if (type is Type.FunctionType && !isMutable) Function(id, type)
-            else Symbol(id, type, isMutable)
-        }
+    open class Function(id: String, type: Type.FunctionType) : Symbol(id, type, false) {
+        override val type: Type.FunctionType = type
 
-        fun createFun(id: String, retType: Type, paramTypes: List<Type>) = create(id, Type.FunctionType(retType, paramTypes), false)
+        constructor(id: String, retType: Type, paramTypes: List<Type>) : this(id, Type.FunctionType(retType, paramTypes))
     }
-
-    open class Function(id: String, override val type: Type.FunctionType) : Symbol(id, type, false)
 }
 
 

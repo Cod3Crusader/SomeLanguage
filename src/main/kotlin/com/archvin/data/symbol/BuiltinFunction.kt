@@ -2,16 +2,15 @@ package com.archvin.data.symbol
 
 import com.archvin.data.type.BuiltinType
 import com.archvin.data.type.BuiltinType.*
-import com.archvin.data.type.Type
-import com.archvin.data.value.LambdaVal
-import com.archvin.data.value.Value
+import com.archvin.pipeline.execution.LambdaVal
+import com.archvin.pipeline.execution.Value
 
 class BuiltinFunction private constructor(
     id: String,
     retType: BuiltinType<*>,
     paramTypes: List<BuiltinType<*>>,
     body: (List<Value>) -> Value
-) : Symbol.Function(id, Type.FunctionType(retType, paramTypes)) {
+) : Symbol.Function(id, retType, paramTypes) {
 
     val lambda: LambdaVal.Builtin = LambdaVal.Builtin(body)
 

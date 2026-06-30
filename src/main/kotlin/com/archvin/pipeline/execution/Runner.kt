@@ -1,7 +1,5 @@
 package com.archvin.pipeline.execution
 
-import com.archvin.data.value.LambdaVal
-import com.archvin.data.value.Value
 import com.archvin.pipeline.typecheck.Instruction
 
 object Runner {
@@ -33,7 +31,7 @@ object Runner {
             is Instruction.ReadInstr -> tempStack.add(c.scope[c.index])
             is Instruction.AssignInstr -> c.scope[c.index] = tempStack.removeLast()
 
-            is Instruction.LitInstr -> tempStack.add(c.value)
+            is Instruction.LoadValue -> tempStack.add(c.value)
             is Instruction.CallInstr -> call(c)
         }
     }

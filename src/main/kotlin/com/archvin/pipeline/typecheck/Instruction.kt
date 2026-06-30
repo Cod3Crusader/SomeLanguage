@@ -1,16 +1,14 @@
 package com.archvin.pipeline.typecheck
 
-import com.archvin.data.scope.Scope
-import com.archvin.data.value.Value
+import com.archvin.pipeline.execution.RuntimeScope
+import com.archvin.pipeline.execution.Value
 import com.archvin.utils.Debug
 
 sealed class Instruction : Debug() {
-    class LitInstr(val value: Value) : Instruction() {
-        override val className: String = "Lit"
-    }
+    class LoadValue(val value: Value) : Instruction()
 
-    class ReadInstr(val scope: Scope, val index: Int) : Instruction()
-    class AssignInstr(val scope: Scope, val index: Int) : Instruction()
+    class ReadInstr(val scope: RuntimeScope, val index: Int) : Instruction()
+    class AssignInstr(val scope: RuntimeScope, val index: Int) : Instruction()
 
     class CallInstr(val paramNum: Int) : Instruction()
 }

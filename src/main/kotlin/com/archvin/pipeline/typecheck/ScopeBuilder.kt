@@ -1,20 +1,21 @@
 package com.archvin.pipeline.typecheck
 
-import com.archvin.data.scope.Scope
 import com.archvin.data.symbol.Symbol
 import com.archvin.exceptions.CompileError
+import com.archvin.pipeline.execution.RuntimeScope
 
 class ScopeBuilder(val parent: ScopeBuilder? = null) {
     private val map = mutableMapOf<String, Stored<*>>()
     private var index = 0
 
     private var finished = false
-    private lateinit var scope: Scope
+    lateinit var scope: RuntimeScope
+        private set
 
-    fun finish() {
+    fun build() {
         finished = true
-        // TODO: statics
-        scope = Scope(ArrayList(), index)
+        // TODO: constants
+        scope = RuntimeScope(index)
     }
 
     fun <T : Symbol> addSymbol(add: T): Stored<T> {
@@ -44,8 +45,8 @@ class ScopeBuilder(val parent: ScopeBuilder? = null) {
 
     data class Stored<T : Symbol>(val obj: T, val index: Int)
 
-    data class Resolved<out T : Symbol>(val res: T, val scope: Scope, val index: Int) {
+    data class Resolved<out T : Symbol>(val res: T, val scope: RuntimeScope, val index: Int) {
         inline fun <reified T : Symbol> asT() = (res as? T)?.let { Resolved(it, scope, index) }
-        constructor(stored: Stored<T>, scope: Scope) : this(stored.obj, scope, stored.index)
+        constructor(stored: Stored<T>, scope: RuntimeScope) : this(stored.obj, scope, stored.index)
     }
 }

@@ -2,7 +2,7 @@ package com.archvin.pipeline.parsing
 
 import com.archvin.data.HasId
 import com.archvin.data.Literal
-import com.archvin.data.value.LambdaVal
+import com.archvin.pipeline.execution.LambdaVal
 import com.archvin.utils.Debug
 
 sealed class Expression : Debug() {
