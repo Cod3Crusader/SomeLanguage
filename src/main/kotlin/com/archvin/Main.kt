@@ -1,7 +1,6 @@
 package com.archvin
 
 //import com.archvin.pipeline.typecheck.TypeChecker
-import com.archvin.pipeline.execution.Runner
 import com.archvin.pipeline.lexing.Tokenizer
 import com.archvin.pipeline.parsing.Parser
 import com.archvin.pipeline.typecheck.TypeChecker
@@ -31,5 +30,5 @@ fun main(args: Array<String>) {
 
 
     println()
-    Runner.process(main)
+    //Runner.process(main)
 }

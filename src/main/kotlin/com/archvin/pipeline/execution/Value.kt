@@ -12,6 +12,4 @@ sealed class Value : Debug() {
     object Uninitialized : Value() {
         override fun asString() = "uninitialized"
     }
-
-    class StaticValue { var value: Value = Uninitialized }
 }

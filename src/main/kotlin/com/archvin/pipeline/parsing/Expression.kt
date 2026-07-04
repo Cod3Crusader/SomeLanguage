@@ -15,7 +15,7 @@ sealed class Expression : Debug() {
     class CallExpr(val functionId: String, val params: List<Expression>) : Expression()
 
     sealed class Declaration(val id: String, open val init: Expression) : Expression() {
-        class VarDeclare(id: String, val typeId: String, override val init: Expression, val isMutable: Boolean = false) : Declaration(id, init)
+        class VarDeclare(id: String, val typeId: String, override val init: Expression) : Declaration(id, init)
         class FunDeclare(id: String, val retType: String, val params: List<Param>, override val init: LambdaExpr)
             : Declaration(id, init) {
             class Param(override val id: String, val typeId: String) : Debug(), HasId

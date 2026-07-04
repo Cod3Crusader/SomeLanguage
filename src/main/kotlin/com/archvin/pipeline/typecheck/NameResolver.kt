@@ -1,46 +1,35 @@
 package com.archvin.pipeline.typecheck
 
-/*
-// obsolete after scope resolver
+import com.archvin.data.symbol.Symbol
+import com.archvin.exceptions.CompileError
+import com.archvin.pipeline.execution.RuntimeScope
 
-open class NameResolver(val parent: NameResolver? = null) {
-    private val map = mutableMapOf<String, Stored<*>>()
-    private var index = 0
-    
-    fun <T : HasId> add(add: T): Stored<T> {
-        val id = add.id
-        if (map.containsKey(id)) throw CompileError.Redeclaration(id)
+open class NameResolver(symbols: List<Symbol>, val scope: RuntimeScope, val parent: NameResolver? = null) {
 
-        val index = when {
-            add !is Type && add !is Symbol.StaticSymbol -> index++
-            else -> -1
-        }
-        val stored = Stored(add, index)
-
-        map[id] = stored
-        return stored
+    val map: Map<String, Stored<*>>
+    init  {
+        val map = mutableMapOf<String, Stored<*>>()
+        symbols.forEachIndexed { index, symbol -> map[symbol.id] = Stored(symbol, index) }
+        this.map = map.toMap()
     }
 
-    fun tryResolve(id: String): Resolved<*>? = map[id]?.let { Resolved(it) } ?: +parent?.tryResolve(id)
+    fun tryResolve(id: String): Resolved<*>? {
+        return map[id]?.let { Resolved(it, this.scope) } ?: parent?.tryResolve(id)
+    }
     fun resolve(id: String): Resolved<*> = tryResolve(id) ?: throw CompileError.UnresolvedIdentifier(id)
-    fun resolveType(id: String) = resolve(id).asT<Type.ObjectType>() ?: throw CompileError.UnresolvedIdentifier(id)
     fun resolveFunc(id: String): Resolved<Symbol.Function> {
-        val res = resolve(id).asT<Symbol>() ?: throw CompileError.UnresolvedIdentifier(id)
-        if (!res.res.isFunction()) throw CompileError.UnresolvedIdentifier(id)
+        val res = resolve(id).asT<Symbol.Function>() ?: throw CompileError.UnresolvedIdentifier(id)
 
-        return Resolved(res.res.asFunction()!!, res.level, res.index)
+        return res
     }
     fun resolveVar(id: String) = resolve(id).asT<Symbol>() ?: throw CompileError.UnresolvedIdentifier(id)
 
-    data class Stored<T : HasId>(val obj: T, val index: Int)
-    data class Resolved<out T : HasId>(val res: T, val level: Int, val index: Int) {
-        inline fun <reified T : HasId> asT() = (res as? T)?.let { Resolved(it, level, index) }
-        constructor(stored: Stored<T>) : this(stored.obj, 0, stored.index)
+
+    data class Resolved<out T : Symbol>(val res: T, val scope: RuntimeScope, val index: Int) {
+        inline fun <reified T : Symbol> asT () = (res as? T)?.let { Resolved(it, scope, index) }
+        constructor(stored: Stored<T>, scope: RuntimeScope) : this(stored.obj, scope, stored.index)
     }
-    operator fun <T : HasId> Resolved<T>?.unaryPlus() = if (this != null) Resolved<T>(
-        this.res,
-        this.level +1,
-        this.index
-    ) else null
+
+    data class Stored<T : Symbol>(val obj: T, val index: Int)
+
 }
- */
