@@ -11,10 +11,11 @@ import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.execution.LambdaVal.Composite
 import com.archvin.pipeline.execution.RuntimeScope
 import com.archvin.pipeline.execution.Value
+import com.archvin.pipeline.parsing.AstNode
+import com.archvin.pipeline.parsing.AstNode.Declaration.FunDeclare
+import com.archvin.pipeline.parsing.AstNode.Declaration.VarDeclare
 import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
-import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare
-import com.archvin.pipeline.parsing.Expression.Declaration.VarDeclare
 import com.archvin.pipeline.typecheck.Instruction.*
 
 
@@ -28,7 +29,7 @@ object TypeChecker {
         instructionStack.last().add(add)
     }
 
-    private fun declare(dec: Declaration, builder: ScopeBuilder) {
+    private fun declare(dec: AstNode.Declaration, builder: ScopeBuilder) {
         val symbol = when (dec) {
             is FunDeclare -> {
                 val retType = BuiltinType.resolveType(dec.retType)
@@ -107,13 +108,11 @@ object TypeChecker {
         val pendingFunctions = mutableListOf<FunDeclare>()
 
         // parse declarations
-        for (expr in lambdaExpr.expressions) {
-            if (expr !is Declaration) continue
+        for (expr in lambdaExpr.declarations) {
             declare(expr, builder)
             if (expr is FunDeclare) {
                 pendingFunctions.add(expr)
             }
-
         }
 
         val (resolver, scope) = builder.build(parent)
@@ -134,7 +133,7 @@ object TypeChecker {
         return scope
     }
 
-    fun process(r: List<Expression>): Composite {
+    fun process(r: LambdaExpr): Composite {
         val topBuilder = ScopeBuilder()
 
         instructionStack.add(ArrayList())
@@ -142,7 +141,7 @@ object TypeChecker {
         builtins.forEach { topBuilder.addSymbol(it) }
 
         val (topResolver, topScope) = topBuilder.build(null)
-        val scope = processLambda(LambdaExpr(r.toMutableList()), topResolver)
+        val scope = processLambda(LambdaExpr(r.expressions, r.declarations), topResolver)
 
 
         // TODO

@@ -6,10 +6,11 @@ import com.archvin.pipeline.lexing.SpecialToken
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.pipeline.lexing.Token
 import com.archvin.pipeline.lexing.Token.IdentifierToken
+import com.archvin.pipeline.parsing.AstNode.Declaration
+import com.archvin.pipeline.parsing.AstNode.Declaration.FunDeclare
+import com.archvin.pipeline.parsing.AstNode.Declaration.FunDeclare.Param
+import com.archvin.pipeline.parsing.AstNode.Declaration.VarDeclare
 import com.archvin.pipeline.parsing.Expression.*
-import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare
-import com.archvin.pipeline.parsing.Expression.Declaration.FunDeclare.Param
-import com.archvin.pipeline.parsing.Expression.Declaration.VarDeclare
 import com.archvin.reader.Reader
 import com.archvin.utils.readAll
 import com.archvin.utils.until
@@ -33,20 +34,25 @@ object Parser {
             }
         }
 
-        val lambda = LambdaExpr()
+        val expr = mutableListOf<Expression>()
+        val decl = mutableListOf<Declaration>()
 
         if (r.step() !is OpenBraces) throw CompileError.UninitializedError(id)
         r.until(CloseBraces) {
             val node = consume(it) ?: throw UnfinishedError("lambda expression")
-            lambda.expressions.add(node)
+
+            when (node) {
+                is Expression -> expr.add(node)
+                is Declaration -> decl.add(node)
+            }
         }
 
-        return FunDeclare(id, typeId, params, lambda)
+        return FunDeclare(id, typeId, params, LambdaExpr(expr, decl))
     }
 
-    private fun parseIdentifier(id: String): Expression {
+    private fun parseIdentifier(id: String): AstNode {
         return when (val next = r.step()) {
-            Assignment -> AssignExpr(id, next() ?: throw UnfinishedError("assignment"))
+            Assignment -> AssignExpr(id, nextExpr() ?: throw UnfinishedError("assignment"))
 
             OpenPar -> {
                 val params = ArrayList<Expression>()
@@ -55,7 +61,7 @@ object Parser {
 
                 r.until (ClosePar) {
                     if (expectComma && it !is Comma) throw CompileError.UnexpectedError(",", r.current().raw)
-                    if (!expectComma) consume(it)?.let { add -> params.add(add) } ?: throw UnfinishedError("call")
+                    if (!expectComma) (consume(it) as? Expression)?.let { add -> params.add(add) } ?: throw UnfinishedError("call")
 
                     expectComma = !expectComma
                 }
@@ -68,7 +74,7 @@ object Parser {
                 val id = next.id
 
                 if (r.step() is Assignment) {
-                    VarDeclare(id, typeId, next() ?: error("Expected initialization"))
+                    VarDeclare(id, typeId, nextExpr() ?: error("Expected initialization"))
                 } else if (r.current() is OpenPar) parseFunctionDecl(id, typeId)
                 else throw CompileError.UninitializedError(id)
             }
@@ -81,7 +87,7 @@ object Parser {
         }
     }
     
-    fun consume(c: Token): Expression? {
+    fun consume(c: Token): AstNode? {
         return when (c) {
             is IdentifierToken -> parseIdentifier(c.id)
             is Token.LiteralToken<*> -> LitExpr(c.lit)
@@ -91,14 +97,25 @@ object Parser {
             is Token.Test -> TODO("this shouldnt be here")
         }
     }
-    
+
+    fun nextExpr() = next() as? Expression
     fun next() = r.step()?.let { consume(it) }
     
-    fun process(r: Reader<Token>): List<Expression> {
+    fun process(r: Reader<Token>): LambdaExpr {
         this.r = r
 
-        val ret = ArrayList<Expression>()
-        r.readAll { consume(it)?.let { ret.add(it) } }
-        return ret
+        val expr = ArrayList<Expression>()
+        val decl = ArrayList<Declaration>()
+
+        r.readAll {
+            consume(it)?.let {
+                when (it) {
+                    is Expression -> expr.add(it)
+                    is Declaration -> decl.add(it)
+                }
+            }
+        }
+
+        return LambdaExpr(expr, decl)
     }
 }
