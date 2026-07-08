@@ -88,7 +88,7 @@ object TypeChecker {
             }
         }
 
-        if (instr.type != expectType && expectType != AnyType)
+        if (instr.type != expectType && expectType !is AnyType)
             throw CompileError.TypeMismatchError(expectType, instr.type)
 
         return instr.instr

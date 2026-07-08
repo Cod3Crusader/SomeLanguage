@@ -11,6 +11,10 @@ void println(str msg) {
     print('\n')
 }
 
+void printNum(i32 num) {
+    print(num)
+    print('\n')
+}
 
 i32 a = 3
-println(add5(a))
+printNum(add5(a))
