@@ -18,3 +18,5 @@ void printNum(i32 num) {
 
 i32 a = 3
 printNum(add5(a))
+
+print(true)

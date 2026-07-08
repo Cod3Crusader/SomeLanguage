@@ -1,9 +1,10 @@
 package com.archvin.pipeline.parsing
 
+import com.archvin.data.Literal.BoolLiteral
 import com.archvin.exceptions.CompileError
 import com.archvin.exceptions.CompileError.UnfinishedError
 import com.archvin.pipeline.lexing.KeywordToken
-import com.archvin.pipeline.lexing.KeywordToken.ReturnKw
+import com.archvin.pipeline.lexing.KeywordToken.*
 import com.archvin.pipeline.lexing.SpecialToken
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.pipeline.lexing.Token
@@ -22,6 +23,8 @@ object Parser {
 
     private fun parseKw(kw: KeywordToken) : Expression = when (kw) {
         ReturnKw -> ReturnExpr(nextExpr())
+        TrueKw -> LitExpr(BoolLiteral(true))
+        FalseKw -> LitExpr(BoolLiteral(false))
     }
 
     private fun parseFunctionDecl(id: String, typeId: String): FunDeclare {

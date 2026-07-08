@@ -2,6 +2,8 @@ package com.archvin.pipeline.lexing
 
 sealed class KeywordToken(raw: String) : Token(raw) {
     object ReturnKw : KeywordToken("return")
+    object TrueKw : KeywordToken("true")
+    object FalseKw : KeywordToken("false")
 
     companion object {
         val map = mutableMapOf<String, KeywordToken>()
@@ -12,6 +14,8 @@ sealed class KeywordToken(raw: String) : Token(raw) {
 
         init {
             add(ReturnKw)
+            add(TrueKw)
+            add(FalseKw)
         }
     }
 }
