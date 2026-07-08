@@ -1,43 +1,48 @@
 package com.archvin.pipeline.execution
 
 import com.archvin.pipeline.typecheck.Instruction
+import com.archvin.pipeline.typecheck.TypeChecker
 
 object Runner {
 
-    private val tempStack = ArrayDeque<Value>()
-
-    private fun call(instr: Instruction.CallInstr) {
-        when (val func = tempStack.removeLast() as LambdaVal) {
+    private fun call(instr: Instruction.CallInstr): Value {
+        when (val func = consume(instr.func) as LambdaVal) {
             is LambdaVal.Builtin -> {
-                val params = List(instr.paramNum) { tempStack.removeLast() }
-                    .reversed() // TODO: reverse at compile time
+                val params = instr.params.map { consume(it) }
                 func.body(params)
-                    .takeIf { it != Value.Uninitialized }?.let { tempStack.add(it) }
+                    .takeIf { it != Value.Uninitialized }?.let { return it }
+
+                return Value.Uninitialized // return if the function returns nothing
             }
             is LambdaVal.Composite -> {
                 val scope = func.scope
                 scope.incDepth()
 
-                (0 until instr.paramNum).forEach { scope[it] = tempStack.removeLast() }
+                instr.params.forEachIndexed { index, it -> scope[index] = consume(it) }
                 func.instructions.forEach { consume(it) }
 
                 scope.decDepth()
+
+                return Value.Uninitialized // TODO
             }
         }
     }
 
-    fun consume(c: Instruction) {
+    fun consume(c: Instruction): Value {
         when (c) {
-            is Instruction.ReadInstr -> tempStack.add(c.scope[c.index])
-            is Instruction.AssignInstr -> c.scope[c.index] = tempStack.removeLast()
+            is Instruction.ReadInstr -> return c.scope[c.index]
+            is Instruction.AssignInstr -> c.scope[c.index] = consume(c.newValue)
 
-            is Instruction.LoadValue -> tempStack.add(c.value)
-            is Instruction.CallInstr -> call(c)
+            is Instruction.LoadValue -> return c.value
+            is Instruction.CallInstr -> return call(c)
         }
+
+        return Value.Uninitialized
     }
 
     fun process(r: LambdaVal) {
-        tempStack.add(r)
-        call(Instruction.CallInstr(0))
+        TypeChecker.topScope.incDepth()
+        call(Instruction.CallInstr(Instruction.LoadValue(r), emptyList()))
+        TypeChecker.topScope.decDepth()
     }
 }

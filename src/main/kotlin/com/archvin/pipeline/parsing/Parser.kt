@@ -111,7 +111,10 @@ object Parser {
             consume(it)?.let {
                 when (it) {
                     is Expression -> expr.add(it)
-                    is Declaration -> decl.add(it)
+                    is Declaration -> {
+                        decl.add(it)
+                        if (it is VarDeclare) expr.add(AssignExpr(it.id, it.init))
+                    }
                 }
             }
         }

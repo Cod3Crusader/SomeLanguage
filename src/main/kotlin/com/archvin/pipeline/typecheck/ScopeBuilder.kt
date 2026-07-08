@@ -7,12 +7,11 @@ import com.archvin.pipeline.execution.RuntimeScope
 class ScopeBuilder {
     private val used = setOf<String>()
     private val symbols = ArrayList<Symbol>()
-    private var index = 0
 
 
     data class Built(val resolver: NameResolver, val scope: RuntimeScope)
     fun build(parentRes: NameResolver?): Built {
-        val scope = RuntimeScope(index)
+        val scope = RuntimeScope(symbols.size)
         return Built(NameResolver(symbols, scope, parentRes), scope)
     }
 
@@ -24,5 +23,4 @@ class ScopeBuilder {
 
         symbols.add(add)
     }
-
 }
