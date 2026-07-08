@@ -8,6 +8,7 @@ sealed class BuiltinType<out T>(override val id: String) : Type.ObjectType(id) {
     object CharType : BuiltinType<Char>("char")
     object I32Type : BuiltinType<Int>("i32")
     object StrType : BuiltinType<String>("str")
+    object BoolType : BuiltinType<Boolean>("bool")
     object VoidType : BuiltinType<Unit>("void")
 
     object AnyType : BuiltinType<Any>("debug") // TODO: remove
@@ -18,6 +19,7 @@ sealed class BuiltinType<out T>(override val id: String) : Type.ObjectType(id) {
             "char" -> CharType
             "i32" -> I32Type
             "str" -> StrType
+            "bool" -> BoolType
             "void" -> VoidType
             else -> throw CompileError.UnresolvedIdentifier(id)
         } // i have no idea why but kotlin doesnt accept BuiltinType<*> sometimes

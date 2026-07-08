@@ -12,6 +12,10 @@ sealed class Literal<out T>(val value: T) : Debug(), HasType {
         override val type = BuiltinType.CharType
     }
 
+    class BoolLiteral(value: Boolean) : Literal<Boolean>(value) {
+        override val type = BuiltinType.BoolType
+    }
+
     sealed class NumberLiteral<T : Number>(value: T) : Literal<T>(value) {
         class I32Literal(value: Int) : NumberLiteral<Int>(value) {
             override val type = BuiltinType.I32Type
