@@ -1,9 +1,9 @@
 package com.archvin.data.type
 
+import com.archvin.exceptions.CompileError
+
 sealed class BuiltinType<out T>(override val id: String) : Type.ObjectType(id) {
     override val className = "${id}T"
-
-    init { map[id] = this }
 
     object CharType : BuiltinType<Char>("char")
     object I32Type : BuiltinType<Int>("i32")
@@ -14,9 +14,13 @@ sealed class BuiltinType<out T>(override val id: String) : Type.ObjectType(id) {
 
     // TODO: reconsider if this should be here
     companion object Resolver {
-        private val map = mutableMapOf<String, BuiltinType<*>>()
-
-        fun resolveType(id: String) = map[id] as Type // i have no idea why but kotlin doesnt accept BuiltinType<*> sometimes
+        fun resolveType(id: String) = when(id) {
+            "char" -> CharType
+            "i32" -> I32Type
+            "str" -> StrType
+            "void" -> VoidType
+            else -> throw CompileError.UnresolvedIdentifier(id)
+        } // i have no idea why but kotlin doesnt accept BuiltinType<*> sometimes
     }
 }
 

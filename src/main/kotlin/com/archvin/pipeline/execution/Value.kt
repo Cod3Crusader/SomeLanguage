@@ -12,4 +12,9 @@ sealed class Value : Debug() {
     object Uninitialized : Value() {
         override fun asString() = "uninitialized"
     }
+
+    class ReturnVal(val value: Value, val retFrom: RuntimeScope) : Value() {
+        // signals that the current scope should be terminated, returning said value
+        override fun asString() = "return $value from $retFrom"
+    }
 }

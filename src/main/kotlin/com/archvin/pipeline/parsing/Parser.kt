@@ -2,6 +2,8 @@ package com.archvin.pipeline.parsing
 
 import com.archvin.exceptions.CompileError
 import com.archvin.exceptions.CompileError.UnfinishedError
+import com.archvin.pipeline.lexing.KeywordToken
+import com.archvin.pipeline.lexing.KeywordToken.ReturnKw
 import com.archvin.pipeline.lexing.SpecialToken
 import com.archvin.pipeline.lexing.SpecialToken.*
 import com.archvin.pipeline.lexing.Token
@@ -17,7 +19,11 @@ import com.archvin.utils.until
 
 object Parser {
     private lateinit var r: Reader<Token>
-    
+
+    private fun parseKw(kw: KeywordToken) : Expression = when (kw) {
+        ReturnKw -> ReturnExpr(nextExpr())
+    }
+
     private fun parseFunctionDecl(id: String, typeId: String): FunDeclare {
         val params = ArrayList<Param>()
 
@@ -86,11 +92,12 @@ object Parser {
             }
         }
     }
-    
+
     fun consume(c: Token): AstNode? {
         return when (c) {
             is IdentifierToken -> parseIdentifier(c.id)
             is Token.LiteralToken<*> -> LitExpr(c.lit)
+            is KeywordToken -> parseKw(c)
 
             is SpecialToken -> throw CompileError.UnexpectedError("expression", c.raw)
 

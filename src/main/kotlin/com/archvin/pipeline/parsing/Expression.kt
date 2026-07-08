@@ -13,4 +13,6 @@ sealed class Expression : AstNode() {
     class CallExpr(val functionId: String, val params: List<Expression>) : Expression()
 
     class LambdaExpr(val expressions: List<Expression>, val declarations: List<Declaration>) : Expression()
+
+    class ReturnExpr(val returns: Expression?) : Expression()
 }

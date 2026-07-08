@@ -81,6 +81,11 @@ object TypeChecker {
             }
 
             is LambdaExpr -> LoadValue(processFunc(expr, emptyList(), resolver)) + VoidType
+
+            is ReturnExpr -> {
+                val returns = expr.returns?.let {checkType(it, AnyType, resolver)} // TODO: check type of return statement
+                ReturnInstr(returns, resolver.scope) + VoidType
+            }
         }
 
         if (instr.type != expectType && expectType != AnyType)

@@ -4,40 +4,44 @@ import com.archvin.pipeline.typecheck.Instruction
 import com.archvin.pipeline.typecheck.TypeChecker
 
 object Runner {
-
     private fun call(instr: Instruction.CallInstr): Value {
         when (val func = consume(instr.func) as LambdaVal) {
             is LambdaVal.Builtin -> {
                 val params = instr.params.map { consume(it) }
-                func.body(params)
-                    .takeIf { it != Value.Uninitialized }?.let { return it }
-
-                return Value.Uninitialized // return if the function returns nothing
+                return func.body(params)
             }
             is LambdaVal.Composite -> {
                 val scope = func.scope
                 scope.incDepth()
 
                 instr.params.forEachIndexed { index, it -> scope[index] = consume(it) }
-                func.instructions.forEach { consume(it) }
+                var result: Value = Value.Uninitialized
+                for (instruction in func.instructions) {
+                    result = consume(instruction)
+                    if (result is Value.ReturnVal) {
+                        if (result.retFrom == scope) result = result.value // unpack if this is the desired scope, bubble up otherwise
+                        break
+                    } // TODO: check inside consume
+                }
 
                 scope.decDepth()
 
-                return Value.Uninitialized // TODO
+                return result
             }
         }
     }
 
-    fun consume(c: Instruction): Value {
-        when (c) {
-            is Instruction.ReadInstr -> return c.scope[c.index]
-            is Instruction.AssignInstr -> c.scope[c.index] = consume(c.newValue)
-
-            is Instruction.LoadValue -> return c.value
-            is Instruction.CallInstr -> return call(c)
+    fun consume(c: Instruction): Value = when (c) {
+        is Instruction.ReadInstr -> c.scope[c.index]
+        is Instruction.AssignInstr -> {
+            c.scope[c.index] = consume(c.newValue)
+            Value.Uninitialized
         }
 
-        return Value.Uninitialized
+        is Instruction.LoadValue -> c.value
+        is Instruction.CallInstr -> call(c)
+
+        is Instruction.ReturnInstr -> Value.ReturnVal(c.returns?.let { consume(it) } ?: Value.Uninitialized, c.returnFrom)
     }
 
     fun process(r: LambdaVal) {

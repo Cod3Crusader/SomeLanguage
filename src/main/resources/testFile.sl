@@ -1,6 +1,9 @@
-void greet(str name) {
-    println("Hello")
-    println(name)
+i32 add5(i32 a) {
+    i32 add3(i32 b) {
+        return add(b, 3)
+    }
+
+    return add(add3(a), 2)
 }
 
 void println(str msg) {
@@ -8,7 +11,6 @@ void println(str msg) {
     print('\n')
 }
 
-greet("me")
 
 i32 a = 3
-println(add(add(a, 2), 1))
+println(add5(a))

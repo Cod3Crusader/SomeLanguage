@@ -74,7 +74,11 @@ object Tokenizer {
                 var raw = "$c"
                 while (r.peek()!!.isSimple()) raw += r.step()
 
-                return if (raw[0].isDigit()) tokenizeNumber(raw) else Token.IdentifierToken(raw)
+                return when {
+                    raw[0].isDigit() -> tokenizeNumber(raw)
+                    raw in KeywordToken.map -> KeywordToken.map[raw]!!
+                    else -> Token.IdentifierToken(raw)
+                }
             }
 
             else -> return tokenizeSpecial(c, r)
