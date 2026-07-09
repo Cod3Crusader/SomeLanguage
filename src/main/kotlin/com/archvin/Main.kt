@@ -26,10 +26,10 @@ fun main(args: Array<String>) {
     val parsed = Parser.process(SimpleReader(tokens))
     //expr.forEach { println(it) }
     val main = TypeChecker.process(parsed)
-    println()
-    main.instructions.forEach { println(it) }
+    //println()
+    //main.instructions.forEach { println(it) }
 
 
-    println()
+    //println()
     Runner.process(main)
 }

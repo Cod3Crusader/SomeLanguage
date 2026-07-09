@@ -91,6 +91,7 @@ object TypeChecker {
                 val returns =
                     if (from.retType != VoidType)
                         expr.returns?.let { checkType(it, from.retType, context) }
+                            ?: throw CompileError.UnfinishedError("return statement")
                     else LoadValue(Value.Uninitialized)
 
                 ReturnInstr(returns, from.scope) + VoidType
