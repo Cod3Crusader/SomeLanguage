@@ -33,10 +33,17 @@ void printNum(i32 num) {
 i32 a = 3
 printNum(add5(a))
 
-if (true) {
-    println("This will not be printed")
-} else {
-    println("This will be printed")
+{
+    i32 b = 1
+    printNum(b)
 }
+
+// printNum(b) // should error, b is out of scope
+
+if (false)
+    println("This will not be printed")
+else if (false)
+    println("This will be printed")
+
 
 println("this will also be printed")
