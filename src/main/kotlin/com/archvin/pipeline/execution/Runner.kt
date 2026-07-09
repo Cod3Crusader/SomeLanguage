@@ -4,30 +4,32 @@ import com.archvin.pipeline.typecheck.Instruction
 import com.archvin.pipeline.typecheck.TypeChecker
 
 object Runner {
+    private fun executeScope(instructions: List<Instruction>, scope: RuntimeScope, params: List<Instruction> = emptyList()) : Value {
+        scope.incDepth()
+
+        params.forEachIndexed { index, it -> scope[index] = consume(it) }
+
+        var result: Value = Value.Uninitialized
+        for (instruction in instructions) {
+            result = consume(instruction)
+            if (result is Value.ReturnVal) { // TODO: check inside consume
+                if (result.retFrom == scope) result = result.value // unpack if this is the desired scope, bubble up otherwise
+                break
+            }
+        }
+
+        scope.decDepth()
+
+        return result
+    }
+
     private fun call(instr: Instruction.CallInstr): Value {
-        when (val func = consume(instr.func) as LambdaVal) {
+        return when (val func = consume(instr.func) as LambdaVal) {
             is LambdaVal.Builtin -> {
                 val params = instr.params.map { consume(it) }
-                return func.body(params)
+                func.body(params)
             }
-            is LambdaVal.Composite -> {
-                val scope = func.scope
-                scope.incDepth()
-
-                instr.params.forEachIndexed { index, it -> scope[index] = consume(it) }
-                var result: Value = Value.Uninitialized
-                for (instruction in func.instructions) {
-                    result = consume(instruction)
-                    if (result is Value.ReturnVal) { // TODO: check inside consume
-                        if (result.retFrom == scope) result = result.value // unpack if this is the desired scope, bubble up otherwise
-                        break
-                    }
-                }
-
-                scope.decDepth()
-
-                return result
-            }
+            is LambdaVal.Composite -> executeScope(func.instructions, func.scope, instr.params)
         }
     }
 
@@ -40,6 +42,8 @@ object Runner {
 
         is Instruction.LoadValue -> c.value
         is Instruction.CallInstr -> call(c)
+
+        is Instruction.LambdaInstr -> executeScope(c.body.instructions, c.body.scope)
 
         is Instruction.ReturnInstr -> Value.ReturnVal(c.returns?.let { consume(it) } ?: Value.Uninitialized, c.returnFrom)
 

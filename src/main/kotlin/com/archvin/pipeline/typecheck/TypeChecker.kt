@@ -83,7 +83,7 @@ object TypeChecker {
                 ReadInstr(scope, index) + symbol.type
             }
 
-            is LambdaExpr -> LoadValue(processScope(expr, VoidType, LAMBDA, context)) + VoidType
+            is LambdaExpr -> LambdaInstr(processScope(expr, VoidType, LAMBDA, context), ) + VoidType
 
             is ReturnExpr -> {
                 val from = context.getClosestFunction() ?: error("return expressions can only appear inside functions")
@@ -98,11 +98,10 @@ object TypeChecker {
 
             is ConditionalExpr -> {
                 val condition = checkType(expr.condition, BuiltinType.BoolType, context)
-                val body = processScope(expr.body, VoidType, LAMBDA, context)
-                val elseBranch = expr.elseBranch?.let { processScope(it, VoidType, LAMBDA, context) }
+                val body = checkType(expr.body, AnyType, context)
+                val elseBranch = expr.elseBranch?.let { checkType(it, AnyType, context) }
 
-                ConditionalInstr(condition, CallInstr(LoadValue(body), emptyList()),
-                    elseBranch?.let { CallInstr(LoadValue(it), emptyList()) }) + VoidType
+                ConditionalInstr(condition, body, elseBranch) + VoidType
             }
         }
 

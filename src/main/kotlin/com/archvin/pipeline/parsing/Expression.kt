@@ -15,5 +15,5 @@ sealed class Expression : AstNode() {
     class LambdaExpr(val expressions: List<Expression>, val declarations: List<Declaration>) : Expression()
 
     class ReturnExpr(val returns: Expression?) : Expression()
-    class ConditionalExpr(val condition: Expression, val body: LambdaExpr, val elseBranch: LambdaExpr?) : Expression()
+    class ConditionalExpr(val condition: Expression, val body: Expression, val elseBranch: Expression?) : Expression()
 }

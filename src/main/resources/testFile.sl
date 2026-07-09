@@ -1,3 +1,9 @@
+/*
+TODO:
+ consider newlines
+*/
+
+
 i32 add5(i32 a) {
     i32 add3(i32 b) {
         return add(b, 3)

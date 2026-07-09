@@ -6,7 +6,7 @@ sealed class Reader<out T>(val length: Int) {
 
     init { if (length == 0) error("Reader is empty") }
 
-    fun get(i: Int) = if (i < length) forceGet(i) else null
+    fun get(i: Int) = if (i in 0..<length) forceGet(i) else null
 
     abstract fun forceGet(i: Int): T
     abstract fun getAll(): List<T>

@@ -53,10 +53,10 @@ object Parser {
 
             if (r.step() != ClosePar) throw CompileError.ExpectationError(")", r.current().raw)
 
-            val body = nextLambda() ?: throw UnfinishedError("if body") // TODO: make it accept any expression
+            val body = nextExpr() ?: throw UnfinishedError("if body")
             val elseBranch = if (r.peek() == ElseKw) {
                 r.step()
-                nextLambda() ?: throw UnfinishedError("else branch")
+                nextExpr() ?: throw UnfinishedError("else branch")
             } else null
 
             ConditionalExpr(condition, body, elseBranch)
@@ -129,7 +129,10 @@ object Parser {
             is Token.LiteralToken<*> -> LitExpr(c.lit)
             is KeywordToken -> parseKw(c)
 
-            is SpecialToken -> throw CompileError.UnexpectedError("character ${c.raw}")
+            is SpecialToken -> {
+                if (c is OpenBraces) processLambdaExpr()
+                else throw CompileError.UnexpectedError("character ${c.raw}")
+            }
 
             is Token.Test -> TODO("this shouldnt be here")
         }
