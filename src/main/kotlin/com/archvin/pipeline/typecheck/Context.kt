@@ -1,10 +1,15 @@
 package com.archvin.pipeline.typecheck
 
 import com.archvin.data.symbol.Symbol
+import com.archvin.data.type.Type
 import com.archvin.exceptions.CompileError
 import com.archvin.pipeline.execution.RuntimeScope
 
-open class NameResolver(symbols: List<Symbol>, val scope: RuntimeScope, val parent: NameResolver? = null) {
+open class Context(symbols: List<Symbol>,
+                   val scope: RuntimeScope,
+                   val type: ContextType,
+                   val retType: Type,
+                   val parent: Context? = null) {
 
     val map: Map<String, Stored<*>>
     init  {
@@ -24,6 +29,7 @@ open class NameResolver(symbols: List<Symbol>, val scope: RuntimeScope, val pare
     }
     fun resolveVar(id: String) = resolve(id).asT<Symbol>() ?: throw CompileError.UnresolvedIdentifier(id)
 
+    fun getClosestFunction(): Context? = if (type == ContextType.FUNCTION) this else parent?.getClosestFunction()
 
     data class Resolved<out T : Symbol>(val res: T, val scope: RuntimeScope, val index: Int) {
         inline fun <reified T : Symbol> asT () = (res as? T)?.let { Resolved(it, scope, index) }
@@ -32,4 +38,8 @@ open class NameResolver(symbols: List<Symbol>, val scope: RuntimeScope, val pare
 
     data class Stored<T : Symbol>(val obj: T, val index: Int)
 
+    enum class ContextType {
+        FUNCTION,
+        LAMBDA
+    }
 }

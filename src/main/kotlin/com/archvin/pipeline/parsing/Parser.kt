@@ -21,42 +21,69 @@ import com.archvin.utils.until
 object Parser {
     private lateinit var r: Reader<Token>
 
+    private fun processLambdaExpr() : LambdaExpr {
+        val expr = ArrayList<Expression>()
+        val decl = ArrayList<Declaration>()
+
+        r.until(CloseBraces) {
+            val node = consume(it) ?: throw UnfinishedError("lambda expression")
+
+            when (node) {
+                is Expression -> expr.add(node)
+                is Declaration -> {
+                    decl.add(node)
+                    if (node is VarDeclare) expr.add(AssignExpr(node.id, node.init))
+                }
+            }
+        }
+
+        return LambdaExpr(expr, decl)
+    }
+
     private fun parseKw(kw: KeywordToken) : Expression = when (kw) {
         ReturnKw -> ReturnExpr(nextExpr())
         TrueKw -> LitExpr(BoolLiteral(true))
         FalseKw -> LitExpr(BoolLiteral(false))
+
+        IfKw -> {
+            // check for syntax (parenthesis)
+            if (r.step() != OpenPar) throw CompileError.ExpectationError("(", r.current().raw)
+
+            val condition = nextExpr() ?: throw UnfinishedError("if condition")
+
+            if (r.step() != ClosePar) throw CompileError.ExpectationError(")", r.current().raw)
+
+            val body = nextLambda() ?: throw UnfinishedError("if body") // TODO: make it accept any expression
+            val elseBranch = if (r.peek() == ElseKw) {
+                r.step()
+                nextLambda() ?: throw UnfinishedError("else branch")
+            } else null
+
+            ConditionalExpr(condition, body, elseBranch)
+        }
+
+        else -> throw CompileError.ExpectationError("expression", kw.raw)
     }
 
     private fun parseFunctionDecl(id: String, typeId: String): FunDeclare {
         val params = ArrayList<Param>()
 
         while(r.step() != ClosePar) {
-            val typeId = (r.current() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
-            val paramId = (r.step() as? IdentifierToken)?.id ?: throw CompileError.UnexpectedError("type identifier", r.current().raw)
+            val typeId = (r.current() as? IdentifierToken)?.id ?: throw CompileError.ExpectationError("type identifier", r.current().raw)
+            val paramId = (r.step() as? IdentifierToken)?.id ?: throw CompileError.ExpectationError("type identifier", r.current().raw)
 
             params.add(Param(paramId, typeId))
 
             when (val got = r.step()) {
                 is Comma -> {}
                 is ClosePar -> break
-                else -> throw CompileError.UnexpectedError(",", got.toString())
+                else -> throw CompileError.ExpectationError(",", got.toString())
             }
         }
 
-        val expr = mutableListOf<Expression>()
-        val decl = mutableListOf<Declaration>()
+        val lambda = nextLambda() ?: throw CompileError.UninitializedError(id)
 
-        if (r.step() !is OpenBraces) throw CompileError.UninitializedError(id)
-        r.until(CloseBraces) {
-            val node = consume(it) ?: throw UnfinishedError("lambda expression")
-
-            when (node) {
-                is Expression -> expr.add(node)
-                is Declaration -> decl.add(node)
-            }
-        }
-
-        return FunDeclare(id, typeId, params, LambdaExpr(expr, decl))
+        return FunDeclare(id, typeId, params, lambda)
     }
 
     private fun parseIdentifier(id: String): AstNode {
@@ -69,7 +96,7 @@ object Parser {
                 var expectComma = false
 
                 r.until (ClosePar) {
-                    if (expectComma && it !is Comma) throw CompileError.UnexpectedError(",", r.current().raw)
+                    if (expectComma && it !is Comma) throw CompileError.ExpectationError(",", r.current().raw)
                     if (!expectComma) (consume(it) as? Expression)?.let { add -> params.add(add) } ?: throw UnfinishedError("call")
 
                     expectComma = !expectComma
@@ -102,14 +129,19 @@ object Parser {
             is Token.LiteralToken<*> -> LitExpr(c.lit)
             is KeywordToken -> parseKw(c)
 
-            is SpecialToken -> throw CompileError.UnexpectedError("expression", c.raw)
+            is SpecialToken -> throw CompileError.UnexpectedError("character ${c.raw}")
 
             is Token.Test -> TODO("this shouldnt be here")
         }
     }
 
-    fun nextExpr() = next() as? Expression
-    fun next() = r.step()?.let { consume(it) }
+    private fun nextLambda(): LambdaExpr? {
+        if (r.peek() !is OpenBraces) return null
+        r.step()
+        return processLambdaExpr()
+    }
+    private fun nextExpr() = next() as? Expression
+    private fun next() = r.step()?.let { consume(it) }
     
     fun process(r: Reader<Token>): LambdaExpr {
         this.r = r

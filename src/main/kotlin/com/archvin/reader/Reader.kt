@@ -6,7 +6,7 @@ sealed class Reader<out T>(val length: Int) {
 
     init { if (length == 0) error("Reader is empty") }
 
-    fun get(i: Int) = if (index < length) forceGet(i) else null
+    fun get(i: Int) = if (i < length) forceGet(i) else null
 
     abstract fun forceGet(i: Int): T
     abstract fun getAll(): List<T>
@@ -15,7 +15,10 @@ sealed class Reader<out T>(val length: Int) {
 
     fun reset() { index = 0 }
 
-    fun step(): T? = get(++index)
+    fun step(amount: Int = 1): T? {
+        index += amount
+        return get(index)
+    }
     fun back() { index-- }
 
     fun peek(i: Int = 1): T? = get(index + i)

@@ -18,10 +18,10 @@ object Runner {
                 var result: Value = Value.Uninitialized
                 for (instruction in func.instructions) {
                     result = consume(instruction)
-                    if (result is Value.ReturnVal) {
+                    if (result is Value.ReturnVal) { // TODO: check inside consume
                         if (result.retFrom == scope) result = result.value // unpack if this is the desired scope, bubble up otherwise
                         break
-                    } // TODO: check inside consume
+                    }
                 }
 
                 scope.decDepth()
@@ -42,6 +42,13 @@ object Runner {
         is Instruction.CallInstr -> call(c)
 
         is Instruction.ReturnInstr -> Value.ReturnVal(c.returns?.let { consume(it) } ?: Value.Uninitialized, c.returnFrom)
+
+        is Instruction.ConditionalInstr -> {
+            val condition = consume(c.condition)
+
+            if (condition is Value.Primitive<*> && condition.value == true) consume(c.body)
+            else c.elseBranch?.let { consume(it) } ?: Value.Uninitialized
+        }
     }
 
     fun process(r: LambdaVal) {

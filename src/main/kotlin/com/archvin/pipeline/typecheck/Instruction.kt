@@ -13,4 +13,5 @@ sealed class Instruction : Debug() {
     class CallInstr(val func: Instruction, val params: List<Instruction>) : Instruction()
 
     class ReturnInstr(val returns: Instruction?, val returnFrom: RuntimeScope) : Instruction()
+    class ConditionalInstr(val condition: Instruction, val body: Instruction, val elseBranch: Instruction?) : Instruction()
 }
