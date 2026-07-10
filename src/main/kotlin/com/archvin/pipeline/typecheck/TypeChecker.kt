@@ -12,8 +12,9 @@ import com.archvin.pipeline.execution.LambdaVal.Composite
 import com.archvin.pipeline.execution.RuntimeScope
 import com.archvin.pipeline.execution.Value
 import com.archvin.pipeline.parsing.AstNode
-import com.archvin.pipeline.parsing.AstNode.Declaration.FunDeclare
-import com.archvin.pipeline.parsing.AstNode.Declaration.VarDeclare
+import com.archvin.pipeline.parsing.AstNode.Declaration.*
+import com.archvin.pipeline.parsing.AstNode.Declaration.UncheckedType.LambdaType
+import com.archvin.pipeline.parsing.AstNode.Declaration.UncheckedType.TypeId
 import com.archvin.pipeline.parsing.Expression
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.pipeline.typecheck.Context.ContextType
@@ -39,16 +40,27 @@ object TypeChecker {
         this.topScope = topScope
     }
 
+    private fun resolveType(unchecked: UncheckedType): Type {
+        return when (unchecked) {
+            is TypeId -> BuiltinType.resolveType(unchecked.id)
+            is LambdaType -> {
+                val retType = resolveType(unchecked.retType)
+                val paramTypes = unchecked.paramTypes.map { resolveType(it) }
+                Type.FunctionType(retType, paramTypes)
+            }
+        }
+    }
+
     private fun declare(dec: AstNode.Declaration, builder: ScopeBuilder) {
         val symbol = when (dec) {
             is FunDeclare -> {
-                val retType = BuiltinType.resolveType(dec.retType)
-                val paramTypes = dec.params.map { BuiltinType.resolveType(it.typeId) }
+                val retType = resolveType(dec.retType)
+                val paramTypes = dec.params.map { resolveType(it.typeId) }
                 Symbol.Function(dec.id, retType, paramTypes)
             }
 
             is VarDeclare -> {
-                val type = BuiltinType.resolveType(dec.typeId)
+                val type = resolveType(dec.typeId)
                 Symbol(dec.id, type)
             }
         }
@@ -115,7 +127,7 @@ object TypeChecker {
     private fun processFunc(funDecl: FunDeclare, declared: Symbol.Function, parent: Context): Composite {
         val builder = ScopeBuilder()
 
-        funDecl.params.forEach { builder.addSymbol(Symbol(it.id, BuiltinType.resolveType(it.typeId))) }
+        funDecl.params.forEach { builder.addSymbol(Symbol(it.id, resolveType(it.typeId))) }
 
         return processScope(funDecl.init, declared.type.retType, FUNCTION, parent, builder)
     }

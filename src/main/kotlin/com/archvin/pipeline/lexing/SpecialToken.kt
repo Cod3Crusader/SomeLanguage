@@ -12,4 +12,5 @@ sealed class SpecialToken(raw: String) : Token(raw) {
     object NewLine : SpecialToken("newline")
     object OpenBraces : SpecialToken("{")
     object CloseBraces : SpecialToken("}")
+    object Colon : SpecialToken(":")
 }

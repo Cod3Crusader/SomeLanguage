@@ -5,10 +5,17 @@ import com.archvin.utils.Debug
 
 sealed class AstNode : Debug() {
     sealed class Declaration(val id: String, open val init: Expression) : AstNode() {
-        class VarDeclare(id: String, val typeId: String, override val init: Expression) : Declaration(id, init)
-        class FunDeclare(id: String, val retType: String, val params: List<Param>, override val init: Expression.LambdaExpr)
+        sealed interface UncheckedType {
+            @JvmInline
+            value class TypeId(val id: String) : UncheckedType
+
+            class LambdaType(val retType: UncheckedType, val paramTypes: List<UncheckedType>) : UncheckedType
+        }
+
+        class VarDeclare(id: String, val typeId: UncheckedType, override val init: Expression) : Declaration(id, init)
+        class FunDeclare(id: String, val retType: UncheckedType, val params: List<Param>, override val init: Expression.LambdaExpr)
             : Declaration(id, init) {
-            class Param(override val id: String, val typeId: String) : Debug(), HasId
+            class Param(override val id: String, val typeId: UncheckedType) : Debug(), HasId
         }
     }
 }

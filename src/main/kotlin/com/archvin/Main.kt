@@ -30,6 +30,6 @@ fun main(args: Array<String>) {
     //main.instructions.forEach { println(it) }
 
 
-    //println()
+    println()
     Runner.process(main)
 }

@@ -6,6 +6,7 @@ sealed class KeywordToken(raw: String) : Token(raw) {
     object FalseKw : KeywordToken("false")
     object IfKw : KeywordToken("if")
     object ElseKw : KeywordToken("else")
+    object LambdaKw : KeywordToken("func")
 
     companion object {
         val map = mutableMapOf<String, KeywordToken>()
@@ -20,6 +21,7 @@ sealed class KeywordToken(raw: String) : Token(raw) {
             add(FalseKw)
             add(IfKw)
             add(ElseKw)
+            add(LambdaKw)
         }
     }
 }
