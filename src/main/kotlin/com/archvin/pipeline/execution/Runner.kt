@@ -43,7 +43,7 @@ object Runner {
         is Instruction.LoadValue -> c.value
         is Instruction.CallInstr -> call(c)
 
-        is Instruction.LambdaInstr -> executeScope(c.body.instructions, c.body.scope)
+        is Instruction.LambdaInstr -> c.body
 
         is Instruction.ReturnInstr -> Value.ReturnVal(c.returns?.let { consume(it) } ?: Value.Uninitialized, c.returnFrom)
 

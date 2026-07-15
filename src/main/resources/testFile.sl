@@ -1,4 +1,4 @@
-i32 add5(i32 a) {
+/*i32 add5(i32 a) {
     i32 add3(i32 b) {
         return add(b, 3)
     }
@@ -41,3 +41,11 @@ else if (false)
 
 
 println("this will also be printed")
+*/
+
+
+void test(func i32() f) {
+    print(f())
+}
+
+test( { return 3 } )

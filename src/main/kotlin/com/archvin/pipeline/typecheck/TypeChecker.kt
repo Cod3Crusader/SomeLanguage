@@ -3,6 +3,7 @@ package com.archvin.pipeline.typecheck
 import com.archvin.data.HasType
 import com.archvin.data.symbol.BuiltinFunction.Companion.builtins
 import com.archvin.data.symbol.Symbol
+import com.archvin.data.symbol.Symbol.Function
 import com.archvin.data.type.BuiltinType
 import com.archvin.data.type.BuiltinType.AnyType
 import com.archvin.data.type.BuiltinType.VoidType
@@ -56,12 +57,14 @@ object TypeChecker {
             is FunDeclare -> {
                 val retType = resolveType(dec.retType)
                 val paramTypes = dec.params.map { resolveType(it.typeId) }
-                Symbol.Function(dec.id, retType, paramTypes)
+                Function(dec.id, retType, paramTypes)
             }
 
             is VarDeclare -> {
                 val type = resolveType(dec.typeId)
-                Symbol(dec.id, type)
+
+                if (type is Type.FunctionType) Function(dec.id, type.retType, type.paramTypes)
+                else Symbol(dec.id, type)
             }
         }
 
@@ -95,7 +98,13 @@ object TypeChecker {
                 ReadInstr(scope, index) + symbol.type
             }
 
-            is LambdaExpr -> LambdaInstr(processScope(expr, VoidType, LAMBDA, context), ) + VoidType
+            is LambdaExpr -> {
+                if (expectType !is Type.FunctionType) throw CompileError.TypeMismatchError(expectType, Type.FunctionType(VoidType, emptyList()))
+                // technically the exact type of the lambda is unknown but
+
+                LambdaInstr(processScope(expr, expectType.retType, FUNCTION, context), ) +
+                        Type.FunctionType(expectType.retType, emptyList())  // TODO: paramtypes
+            }
 
             is ReturnExpr -> {
                 val from = context.getClosestFunction() ?: error("return expressions can only appear inside functions")
@@ -127,7 +136,7 @@ object TypeChecker {
     private fun processFunc(funDecl: FunDeclare, declared: Symbol.Function, parent: Context): Composite {
         val builder = ScopeBuilder()
 
-        funDecl.params.forEach { builder.addSymbol(Symbol(it.id, resolveType(it.typeId))) }
+        funDecl.params.forEach { declare(it, builder) }
 
         return processScope(funDecl.init, declared.type.retType, FUNCTION, parent, builder)
     }

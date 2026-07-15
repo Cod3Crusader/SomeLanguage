@@ -11,7 +11,6 @@ import com.archvin.pipeline.lexing.Token
 import com.archvin.pipeline.lexing.Token.IdentifierToken
 import com.archvin.pipeline.parsing.AstNode.Declaration
 import com.archvin.pipeline.parsing.AstNode.Declaration.*
-import com.archvin.pipeline.parsing.AstNode.Declaration.FunDeclare.Param
 import com.archvin.pipeline.parsing.AstNode.Declaration.UncheckedType.TypeId
 import com.archvin.pipeline.parsing.Expression.*
 import com.archvin.reader.Reader
@@ -32,7 +31,7 @@ object Parser {
                 is Expression -> expr.add(node)
                 is Declaration -> {
                     decl.add(node)
-                    if (node is VarDeclare) expr.add(AssignExpr(node.id, node.init))
+                    if (node is VarDeclare && node.init != null) expr.add(AssignExpr(node.id, node.init))
                 }
             }
         }
@@ -50,6 +49,8 @@ object Parser {
     private fun parseLambdaType(): UncheckedType.LambdaType {
         // assumes LambdaKw is consumed
 
+        val retType = nextType() ?: throw CompileError.ExpectationError("return type", r.current().raw)
+
         if (r.step() != OpenPar) throw CompileError.ExpectationError("(", r.current().raw)
         val paramTypes = ArrayList<UncheckedType>()
 
@@ -61,11 +62,6 @@ object Parser {
 
             expectComma = !expectComma
         }
-
-        if (r.step() != ClosePar) throw CompileError.ExpectationError(")", r.current().raw)
-        if (r.step() != Colon) throw CompileError.ExpectationError(":", r.current().raw)
-
-        val retType = nextType() ?: throw CompileError.ExpectationError("return type", r.current().raw)
 
         return UncheckedType.LambdaType(retType, paramTypes)
     }
@@ -102,23 +98,25 @@ object Parser {
     }
 
     private fun parseFunctionDecl(id: String, type: UncheckedType): FunDeclare {
-        val params = ArrayList<Param>()
+        val params = ArrayList<VarDeclare>()
 
-        if (r.peek() != ClosePar) while (true) {
-            val typeId = nextType() ?: throw CompileError.ExpectationError("type identifier", r.current().raw)
-            val paramId = (r.step() as? IdentifierToken)?.id ?: throw CompileError.ExpectationError(
-                "type identifier",
-                r.current().raw
-            )
+        if (r.peek() != ClosePar)
+            while (true) {
+                val type = nextType() ?: throw CompileError.ExpectationError("type identifier", r.current().raw)
+                val paramId = (r.step() as? IdentifierToken)?.id ?: throw CompileError.ExpectationError(
+                    "type identifier",
+                    r.current().raw
+                )
 
-            params.add(Param(paramId, typeId))
+                params.add(VarDeclare(paramId, type))
 
-            when (val got = r.step()) {
-                is Comma -> {}
-                is ClosePar -> break // the loop will detect ClosePar and break
-                else -> throw CompileError.ExpectationError(",", got.toString())
+                when (val got = r.step()) {
+                    is Comma -> {}
+                    is ClosePar -> break // the loop will detect ClosePar and break
+                    else -> throw CompileError.ExpectationError(",", got.toString())
+                }
             }
-        }
+        else r.step()
 
 
         val lambda = nextLambda() ?: throw CompileError.UninitializedError(id)
@@ -202,7 +200,7 @@ object Parser {
                     is Expression -> expr.add(it)
                     is Declaration -> {
                         decl.add(it)
-                        if (it is VarDeclare) expr.add(AssignExpr(it.id, it.init))
+                        if (it is VarDeclare && it.init != null) expr.add(AssignExpr(it.id, it.init))
                     }
                 }
             }

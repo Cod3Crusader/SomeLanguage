@@ -5,6 +5,8 @@ import com.archvin.data.type.Type
 import com.archvin.pipeline.typecheck.Instruction
 
 sealed class CompileError(errorMessage: String) : Exception(errorMessage) {
+    class Error(msg: String) : CompileError(msg)
+
     class TypeMismatchError(expected: Type, got: Type)
         : CompileError("Expected type: ${expected.signature}, but received: ${got.signature}") {}
     class UnknownCharacterError(char: String) : CompileError("Unknown character '$char'")

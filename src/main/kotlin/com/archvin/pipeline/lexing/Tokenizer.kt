@@ -55,6 +55,7 @@ object Tokenizer {
             '-' -> Subtraction
             '*' -> Multiplication
             '/' -> Division
+            ':' -> Colon
             else -> throw CompileError.UnknownCharacterError("$c")
         }
     }
